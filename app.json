@@ -1,0 +1,12 @@
+{
+  "name": "mohim",
+  "displayName": "mohim",
+  "expo": {
+    "name": "mohim",
+    "slug": "mohim",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
