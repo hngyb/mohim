@@ -1,19 +1,20 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { Provider as ReduxProvider } from "react-redux";
+import { makeStore } from "./src/store";
+import MainNavigator from "./src/screens/MainNavigator";
+import axios from "axios";
+
+const store = makeStore();
+axios.defaults.baseURL = "http://localhost:9179";
+axios.defaults.withCredentials = true;
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-    </View>
+    <ReduxProvider store={store}>
+      <NavigationContainer>
+        <MainNavigator />
+      </NavigationContainer>
+    </ReduxProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
