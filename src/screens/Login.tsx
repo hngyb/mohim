@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from "react";
-import { AutoFocusProvider, useAutoFocus } from "../contexts";
 import { useNavigation } from "@react-navigation/native";
 import {
   SafeAreaView,
@@ -10,21 +9,17 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { AppState } from "../store";
+import { useDispatch } from "react-redux";
 import * as U from "../utils";
 import * as L from "../store/login";
 import * as A from "../store/asyncStorage";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useEffect } from "react";
 import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState<string>("");
-  const [name, setName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const focus = useAutoFocus();
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -91,7 +86,6 @@ export default function Login() {
         <View style={{ flex: 1 }}>
           <View style={[styles.textInputView]}>
             <TextInput
-              onFocus={focus}
               style={[styles.textInput]}
               value={email}
               onChangeText={setEmail}
@@ -99,7 +93,6 @@ export default function Login() {
               placeholderTextColor="gray"
             />
             <TextInput
-              onFocus={focus}
               style={[styles.textInput]}
               value={password}
               onChangeText={setPassword}

@@ -1,19 +1,25 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import {
   StyleSheet,
   View,
+  Text,
+  SafeAreaView,
   Animated,
   Easing,
-  TouchableOpacity,
-  Text,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useAnimatedValue, useStyle } from "../hooks";
-import { interpolate } from "../utils";
+import { useAnimatedValue } from "../hooks";
+import { TouchableView } from "../components";
+import * as S from "./Styles";
+
+/*
+Todo
+1. 이용약관 및 개인 정보 정책 페이지 제작 및 연결
+ */
 
 export default function Auth() {
   const navigation = useNavigation();
-  const goLogIn = useCallback(() => {
+  const goLogin = useCallback(() => {
     navigation.navigate("Login");
   }, []);
   const goSignUp = useCallback(() => {
@@ -21,14 +27,7 @@ export default function Auth() {
   }, []);
 
   const imageAnimValue = useAnimatedValue(0);
-  const buttonAnimValue = useAnimatedValue(0);
-  const imageAnimStyle = useStyle({
-    transform: [
-      {
-        translateY: interpolate(imageAnimValue, [0, -70]),
-      },
-    ],
-  });
+  const authAnimValue = useAnimatedValue(0);
   Animated.sequence([
     Animated.timing(imageAnimValue, {
       useNativeDriver: true,
@@ -36,7 +35,7 @@ export default function Auth() {
       duration: 500,
       easing: Easing.linear,
     }),
-    Animated.timing(buttonAnimValue, {
+    Animated.timing(authAnimValue, {
       useNativeDriver: true,
       toValue: 1,
       duration: 500,
@@ -45,84 +44,113 @@ export default function Auth() {
   ]).start();
 
   return (
-    <View style={[styles.view]}>
-      <Animated.Image
-        source={require("../assets/images/logo.png")}
-        style={[
-          {
-            position: "absolute",
-            width: "20%",
-            resizeMode: "contain",
-          },
-          imageAnimStyle,
-        ]}
-      ></Animated.Image>
-      <View style={[styles.view]}></View>
-      <View style={[styles.view]}>
-        <Animated.View
-          style={[styles.signUpView, { opacity: buttonAnimValue }]}
-        >
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[styles.button]}
-            onPress={goSignUp}
-          >
-            <Text style={[styles.text]}>카카오톡으로 시작하기</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[styles.button]}
-            onPress={goSignUp}
-          >
-            <Text style={[styles.text]}>이메일로 시작하기</Text>
-          </TouchableOpacity>
-          <Text style={[styles.agreementText]}>
-            계정을 등록함으로써, 귀하는 이용약관 및 개인 정보 보호 정책에
-            동의하시게 됩니다.
-          </Text>
-        </Animated.View>
-        <Animated.View style={[styles.logInView, { opacity: buttonAnimValue }]}>
-          <Text>계정이 이미 있으신가요?</Text>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[styles.button]}
-            onPress={goLogIn}
-          >
-            <Text style={[styles.text]}>로그인</Text>
-          </TouchableOpacity>
+    <SafeAreaView style={[styles.container]}>
+      <View style={[styles.imageContainer]}>
+        <Animated.Image
+          source={require("../assets/images/authImage.png")}
+          style={[styles.image, { opacity: imageAnimValue }]}
+        />
+      </View>
+      <View style={[styles.authContainer]}>
+        <Animated.View style={{ flex: 1, opacity: authAnimValue }}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }} />
+            <TouchableView
+              style={[S.buttonStyles.longButton]}
+              onPress={goSignUp}
+            >
+              <Text style={[styles.bigText]}>이메일로 시작하기</Text>
+            </TouchableView>
+            <View style={{ flex: 2, justifyContent: "flex-end" }}>
+              <Text style={[styles.mediumText]}>
+                이미 계정을 갖고 계신가요?
+              </Text>
+            </View>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
+              <TouchableView
+                style={[S.buttonStyles.longButton]}
+                onPress={goLogin}
+              >
+                <Text style={[styles.bigText]}>로그인하기</Text>
+              </TouchableView>
+            </View>
+            <View
+              style={{
+                flex: 3,
+                justifyContent: "center",
+                paddingHorizontal: "10%",
+              }}
+            >
+              <View style={{ flex: 1 }}></View>
+              <View style={{ flex: 1, justifyContent: "center" }}>
+                <Text>
+                  <Text style={[styles.smallText]}>
+                    {"계정을 등록함으로써, 귀하는 '모임'의 "}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.smallText,
+                      {
+                        textDecorationLine: "underline",
+                      },
+                    ]}
+                    onPress={goLogin}
+                  >
+                    {"이용약관"}
+                  </Text>
+                  <Text style={[styles.smallText]}>{" 및 \n"}</Text>
+                  <Text
+                    style={[
+                      styles.smallText,
+                      { textDecorationLine: "underline" },
+                    ]}
+                    onPress={goLogin}
+                  >
+                    개인 정보 보호 정책
+                  </Text>
+                  <Text style={[styles.smallText]}>에 동의하시게 됩니다.</Text>
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}></View>
+            </View>
+          </View>
         </Animated.View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  view: {
+  container: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  imageContainer: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
   },
-  signUpView: {
+  image: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-start",
+    resizeMode: "contain",
   },
-  agreementText: {
+  authContainer: {
+    flex: 1,
+    paddingHorizontal: "5%",
+  },
+  bigText: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  mediumText: {
+    textAlign: "center",
+    fontSize: 15,
+    paddingBottom: 10,
+  },
+  smallText: {
+    textAlign: "center",
     fontSize: 11,
-    flexWrap: "wrap",
-    paddingTop: 10,
-    paddingLeft: 50,
-    paddingRight: 50,
-  },
-  logInView: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  button: {
-    margin: 10,
-  },
-  text: {
-    fontSize: 20,
   },
 });

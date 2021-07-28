@@ -8,16 +8,21 @@ const Stack = createStackNavigator();
 
 export default function MainNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{ headerShown: false, cardStyleInterpolator: forFade }}
+    >
       <Stack.Screen name="Loading" component={Loading}></Stack.Screen>
       <Stack.Screen
         name="AuthNavigator"
         component={AuthNavigator}
-        options={{
-          animationEnabled: false,
-        }}
       ></Stack.Screen>
       <Stack.Screen name="Home" component={Home}></Stack.Screen>
     </Stack.Navigator>
   );
 }
+
+export const forFade = ({ current }) => ({
+  cardStyle: {
+    opacity: current.progress,
+  },
+});

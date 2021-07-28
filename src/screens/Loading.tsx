@@ -10,13 +10,10 @@ import SplashScreen from "react-native-splash-screen";
 
 export default function () {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+
   const goAuth = useCallback(() => navigation.navigate("AuthNavigator"), []);
   const goHome = useCallback(() => navigation.navigate("Home"), []);
-  const goLogin = useCallback(
-    () => navigation.navigate("AuthNavigator", { screen: "Login" }),
-    []
-  );
-  const dispatch = useDispatch();
 
   useEffect(() => {
     U.readFromStorage(L.loggedUserKey).then((value) => {
@@ -41,7 +38,7 @@ export default function () {
             })
             .catch((e) => {
               SplashScreen.hide(); // splashScreen 닫기
-              goLogin(); // refresh 토큰 만료 -> 재로그인 과정으로 이동
+              goAuth(); // refresh 토큰 만료 -> 재로그인 과정으로 이동
             });
         });
       } else {

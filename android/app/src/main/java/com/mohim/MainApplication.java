@@ -9,6 +9,7 @@ import com.facebook.react.ReactApplication;
 import io.expo.appearance.RNCAppearancePackage;
 import io.expo.appearance.RNCAppearancePackage;
 import io.expo.appearance.RNCAppearancePackage;
+import io.expo.appearance.RNCAppearancePackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
