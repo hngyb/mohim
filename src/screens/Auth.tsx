@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAnimatedValue } from "../hooks";
-import { TouchableView } from "../components";
+import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
 
 /*
@@ -45,6 +45,7 @@ export default function Auth() {
 
   return (
     <SafeAreaView style={[styles.container]}>
+      <NavigationHeader></NavigationHeader>
       <View style={[styles.imageContainer]}>
         <Animated.Image
           source={require("../assets/images/authImage.png")}

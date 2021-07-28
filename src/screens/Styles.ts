@@ -4,6 +4,7 @@ import color from "color";
 
 export const windowWidth = Dimensions.get("window").width;
 export const windowHeight = Dimensions.get("window").height;
+export const headerHeight = windowHeight * 0.05;
 
 export const buttonStyles = StyleSheet.create({
   longButton: {
