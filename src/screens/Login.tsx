@@ -15,7 +15,13 @@ import * as L from "../store/login";
 import * as A from "../store/asyncStorage";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
+import { NavigationHeader, TouchableView } from "../components";
 
+/*
+Todo
+1. 비밀번호 잊었을 때
+2. 비밀번호 피드백
+ */
 export default function Login() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -23,10 +29,7 @@ export default function Login() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  const goBack = useCallback(
-    () => navigation.canGoBack() && navigation.goBack(),
-    []
-  );
+  const goBack = useCallback(() => navigation.navigate("Auth"), []);
   const goHome = useCallback(() => navigation.navigate("Home"), []);
   const goTabNavigator = useCallback(() => {
     axios
@@ -54,101 +57,20 @@ export default function Login() {
   const goSignUp = useCallback(() => navigation.navigate("SignUp"), []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <TouchableOpacity activeOpacity={0.8} onPress={goBack}>
-        <Icon name="chevron-back-outline" size={30}></Icon>
-      </TouchableOpacity>
-      <View style={{ flex: 1 }}></View>
-      <View style={{ flex: 3, paddingRight: 10, paddingLeft: 10 }}>
-        <Text style={[styles.startText]}>로그인</Text>
-        <View style={{ flex: 1 }}>
-          <TouchableOpacity
-            style={[
-              styles.circleTouchableOpacity,
-              { backgroundColor: "lightgrey" },
-            ]}
-            onPress={goTabNavigator}
-          >
-            <Text style={{ textAlign: "center", fontSize: 15 }}>
-              카카오톡으로 로그인하기
-            </Text>
-          </TouchableOpacity>
-          <View
-            style={{
-              flex: 2,
-              justifyContent: "center",
-              alignContent: "center",
-            }}
-          >
-            <Text style={{ textAlign: "center" }}>또는</Text>
-          </View>
-        </View>
-        <View style={{ flex: 1 }}>
-          <View style={[styles.textInputView]}>
-            <TextInput
-              style={[styles.textInput]}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="이메일"
-              placeholderTextColor="gray"
-            />
-            <TextInput
-              style={[styles.textInput]}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="비밀번호"
-              placeholderTextColor="gray"
-            />
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.circleTouchableOpacity,
-              { backgroundColor: "lightgrey" },
-            ]}
-            onPress={goTabNavigator}
-          >
-            <Text style={{ textAlign: "center", fontSize: 15 }}>로그인</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={{ flex: 1, justifyContent: "flex-end" }}>
-        <View style={{ flexDirection: "row", justifyContent: "center" }}>
-          <Text style={{}}>계정이 없으신가요?</Text>
-          <TouchableOpacity onPress={goSignUp}>
-            <Text style={{ textDecorationLine: "underline" }}> 시작하기</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+    <SafeAreaView style={[styles.container]}>
+      <NavigationHeader
+        Left={() => (
+          <TouchableView onPress={goBack}>
+            <Icon name="close" size={30}></Icon>
+          </TouchableView>
+        )}
+      ></NavigationHeader>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  view: { flex: 1, justifyContent: "center", alignItems: "center" },
-  startText: {
-    justifyContent: "flex-start",
-    fontSize: 25,
-  },
-  textInputView: {
-    flex: 3,
-    justifyContent: "space-between",
-  },
-  textInput: {
+  container: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "lightgrey",
-    backgroundColor: "lightgrey",
-    borderRadius: 5,
-    paddingLeft: 10,
-    paddingRight: 10,
-    margin: 5,
-    fontSize: 15,
-  },
-  circleTouchableOpacity: {
-    flex: 1,
-    borderRadius: 25,
-    justifyContent: "center",
-    marginTop: 30,
-    marginBottom: 10,
   },
 });

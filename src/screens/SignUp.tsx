@@ -22,6 +22,7 @@ import CheckBox from "react-native-check-box";
 import Color from "color";
 
 /*
+Todo
 3. 키보드 가리지 않게 하기
 5. 오토포커싱
  */
@@ -37,10 +38,7 @@ export default function SignUp() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  const goBack = useCallback(
-    () => navigation.canGoBack() && navigation.goBack(),
-    []
-  );
+  const goBack = useCallback(() => navigation.navigate("Auth"), []);
   const goTabNavigator = useCallback(() => {
     if (email !== "" && name !== "" && password !== "") {
       axios
@@ -76,7 +74,12 @@ export default function SignUp() {
         });
     } else Alert.alert("모든 정보를 입력해주세요.");
   }, [name, email, password]);
-  const goLogin = useCallback(() => navigation.navigate("Login"), []);
+  const goLogin = useCallback(() => {
+    setTimeout(() => {
+      navigation.navigate("Login");
+    }, 500);
+    navigation.goBack();
+  }, []);
 
   useEffect(() => {
     if (
@@ -115,7 +118,7 @@ export default function SignUp() {
       <NavigationHeader
         Left={() => (
           <TouchableView onPress={goBack}>
-            <Icon name="chevron-back-outline" size={30}></Icon>
+            <Icon name="close" size={30}></Icon>
           </TouchableView>
         )}
       ></NavigationHeader>

@@ -47,6 +47,7 @@ export default function () {
           SplashScreen.hide();
           goAuth(); // 첫 로그인 화면으로 이동
         }, 2000);
+        return () => clearTimeout(id);
       }
     });
   }, []);
