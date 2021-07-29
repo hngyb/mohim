@@ -13,7 +13,7 @@ export default function () {
   const dispatch = useDispatch();
 
   const goAuth = useCallback(() => navigation.navigate("AuthNavigator"), []);
-  const goHome = useCallback(() => navigation.navigate("Home"), []);
+  const goHome = useCallback(() => navigation.navigate("TabNavigator"), []);
 
   useEffect(() => {
     U.readFromStorage(L.loggedUserKey).then((value) => {

@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
-import SplashScreen from "react-native-splash-screen";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SplashScreen from "react-native-splash-screen";
 
-export default function Home() {
+export default function MyPage() {
   useEffect(() => {
     SplashScreen.hide();
   }, []);

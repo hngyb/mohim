@@ -61,7 +61,7 @@ export default function SignUp() {
             .then((tokens) => {
               dispatch(A.setJWT(tokens.accessToken, tokens.refreshToken));
               dispatch(L.loginAction({ email, name, password }));
-              navigation.navigate("Home");
+              navigation.navigate("TabNavigator");
             })
             .catch((e) => {
               Alert.alert("비정상적인 접근입니다.");

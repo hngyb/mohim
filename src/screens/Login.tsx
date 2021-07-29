@@ -22,7 +22,7 @@ import Color from "color";
 /*
 Todo
 1. 비밀번호 찾기 페이지 제작 및 연결
-2. 비밀번호 표시 이후 비밀번호 한 번에 지워지는 버그 
+2. 비밀번호 표시 이후 비밀번호 한 번에 지워지는 버그 해결
  */
 export default function Login() {
   const [email, setEmail] = useState<string>("");
@@ -34,7 +34,7 @@ export default function Login() {
   const dispatch = useDispatch();
 
   const goBack = useCallback(() => navigation.navigate("Auth"), []);
-  const goHome = useCallback(() => navigation.navigate("Home"), []);
+  const goHome = useCallback(() => navigation.navigate("TabNavigator"), []);
   const goTabNavigator = useCallback(() => {
     axios
       .post("/api/users/login", { email, password })

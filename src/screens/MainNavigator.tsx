@@ -2,7 +2,7 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import Loading from "./Loading";
 import AuthNavigator from "./AuthNavigator";
-import Home from "./Home";
+import TabNavigator from "./TabNavigator";
 
 const Stack = createStackNavigator();
 
@@ -16,7 +16,7 @@ export default function MainNavigator() {
         name="AuthNavigator"
         component={AuthNavigator}
       ></Stack.Screen>
-      <Stack.Screen name="Home" component={Home}></Stack.Screen>
+      <Stack.Screen name="TabNavigator" component={TabNavigator}></Stack.Screen>
     </Stack.Navigator>
   );
 }
