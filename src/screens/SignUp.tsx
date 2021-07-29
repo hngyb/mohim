@@ -18,11 +18,11 @@ import axios from "axios";
 import * as S from "./Styles";
 import { NavigationHeader, TouchableView } from "../components";
 import { Colors } from "react-native-paper";
-import CheckBox from "react-native-check-box";
 import Color from "color";
 
 /*
 Todo
+2. 비밀번호 표시 이후 비밀번호 한 번에 지워지는 버그 해결
 3. 키보드 가리지 않게 하기
 5. 오토포커싱
  */
@@ -31,7 +31,7 @@ export default function SignUp() {
   const [name, setName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
-  const [showPassword, setShowPassword] = useState<boolean>(true);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isEmailValid, setIsEmailValid] = useState<boolean>(false);
   const [isPasswordValid, setIsPasswordValid] = useState<boolean>(false);
   const focus = useAutoFocus();
@@ -93,7 +93,7 @@ export default function SignUp() {
     } else {
       setButtonDisabled(true);
     }
-  }, [email, name, password]);
+  }, [email, name, password, isEmailValid, isPasswordValid]);
 
   // input validation
   const emailRegex = /\S+@\S+\.\S+/;
@@ -131,7 +131,7 @@ export default function SignUp() {
         >
           <Text style={[styles.startText]}>시작하기</Text>
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, marginBottom: 10 }}>
           <TextInput
             onFocus={focus}
             style={[styles.textInput]}
@@ -143,7 +143,7 @@ export default function SignUp() {
           />
           <Text> </Text>
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, marginBottom: 10 }}>
           <TextInput
             onFocus={focus}
             style={[styles.textInput]}
@@ -167,17 +167,27 @@ export default function SignUp() {
               : "이메일을 확인해주세요 :("}
           </Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <TextInput
-            onFocus={focus}
-            style={[styles.textInput]}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="비밀번호 (영문 / 숫자 조합 8자 이상)"
-            placeholderTextColor="gray"
-            secureTextEntry={showPassword}
-            autoCapitalize="none"
-          />
+        <View style={{ flex: 1, marginBottom: 15 }}>
+          <View style={{ flex: 1, flexDirection: "row" }}>
+            <TextInput
+              // onFocus={focus}
+              style={[styles.passwordInput, { flex: 9 }]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="비밀번호 (영문 / 숫자 조합 8자 이상)"
+              placeholderTextColor="gray"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <View style={[styles.showPasswordIcon]}>
+              <Icon
+                name={showPassword ? "eye" : "eye-off"}
+                size={25}
+                color="gray"
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            </View>
+          </View>
           <Text
             style={[
               styles.validText,
@@ -187,33 +197,13 @@ export default function SignUp() {
             {password === ""
               ? " "
               : isPasswordValid
-              ? "올바른 비밀번호입니다 :)"
+              ? "올바른 비밀번호 형식입니다 :)"
               : "비밀번호를 확인해주세요 :("}
           </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <CheckBox
-              isChecked={!showPassword}
-              onClick={() => {
-                setShowPassword(!showPassword);
-              }}
-              style={{ marginHorizontal: 10 }}
-            />
-          </View>
-          <View style={{ flex: 10 }}>
-            <Text style={{ fontSize: 15 }}>비밀번호 보기</Text>
-          </View>
         </View>
       </View>
       <View style={[styles.buttonContainer]}>
         <View style={{ flex: 1 }}>
-          <View style={{ flex: 1 }}></View>
           <View style={{ flex: 1 }}>
             <TouchableView
               style={[
@@ -237,7 +227,7 @@ export default function SignUp() {
               </Text>
             </TouchableView>
           </View>
-          <View style={{ flex: 2 }}></View>
+          <View style={{ flex: 3 }}></View>
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1, justifyContent: "flex-end" }}>
@@ -272,6 +262,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     margin: 5,
     fontSize: 18,
+  },
+  passwordInput: {
+    flex: 1,
+    backgroundColor: "lightgrey",
+    borderRadius: 5,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    paddingHorizontal: 10,
+    marginVertical: 5,
+    marginLeft: 5,
+    fontSize: 18,
+  },
+  showPasswordIcon: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "lightgrey",
+    borderRadius: 5,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    paddingRight: 10,
+    marginRight: 5,
+    marginVertical: 5,
   },
   buttonContainer: {
     flex: 1,

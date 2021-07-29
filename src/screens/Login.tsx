@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   SafeAreaView,
@@ -6,7 +6,6 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
   Alert,
 } from "react-native";
 import { useDispatch } from "react-redux";
@@ -16,15 +15,20 @@ import * as A from "../store/asyncStorage";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { NavigationHeader, TouchableView } from "../components";
+import * as S from "./Styles";
+import { Colors } from "react-native-paper";
+import Color from "color";
 
 /*
 Todo
-1. 비밀번호 잊었을 때
-2. 비밀번호 피드백
+1. 비밀번호 찾기 페이지 제작 및 연결
+2. 비밀번호 표시 이후 비밀번호 한 번에 지워지는 버그 
  */
 export default function Login() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -54,7 +58,20 @@ export default function Login() {
         }
       });
   }, [email, password]);
-  const goSignUp = useCallback(() => navigation.navigate("SignUp"), []);
+  const goSignUp = useCallback(() => {
+    setTimeout(() => {
+      navigation.navigate("SignUp");
+    }, 500);
+    navigation.goBack();
+  }, []);
+
+  useEffect(() => {
+    if (email !== "" && password !== "") {
+      setButtonDisabled(false);
+    } else {
+      setButtonDisabled(true);
+    }
+  }, [email, password]);
 
   return (
     <SafeAreaView style={[styles.container]}>
@@ -65,6 +82,105 @@ export default function Login() {
           </TouchableView>
         )}
       ></NavigationHeader>
+      <View style={[styles.textInputContainer]}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+          }}
+        >
+          <Text style={[styles.loginText]}>로그인하기</Text>
+        </View>
+        <View style={{ flex: 3 }}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              // onFocus={focus}
+              style={[styles.textInput]}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="이메일"
+              placeholderTextColor="gray"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={{ flex: 1, flexDirection: "row" }}>
+            <TextInput
+              // onFocus={focus}
+              style={[styles.passwordInput, { flex: 9 }]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="비밀번호"
+              placeholderTextColor="gray"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <View style={[styles.showPasswordIcon]}>
+              <Icon
+                name={showPassword ? "eye" : "eye-off"}
+                size={25}
+                color="gray"
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            </View>
+          </View>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "flex-end",
+              paddingRight: 20,
+            }}
+          >
+            <TouchableView>
+              <Text
+                style={[
+                  styles.mediumText,
+                  { textDecorationLine: "underline", marginTop: 10 },
+                ]}
+              >
+                비밀번호를 잊으셨나요?
+              </Text>
+            </TouchableView>
+          </View>
+        </View>
+      </View>
+      <View style={[styles.buttonContainer]}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flex: 1 }}>
+            <TouchableView
+              style={[
+                S.buttonStyles.longButton,
+                {
+                  backgroundColor: buttonDisabled
+                    ? Color(Colors.grey300).alpha(0.5).string()
+                    : "lightgrey",
+                },
+              ]}
+              onPress={goTabNavigator}
+              disabled={buttonDisabled}
+            >
+              <Text
+                style={[
+                  styles.bigText,
+                  { color: buttonDisabled ? Colors.grey400 : "black" },
+                ]}
+              >
+                로그인하기
+              </Text>
+            </TouchableView>
+          </View>
+          <View style={{ flex: 3 }}></View>
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, justifyContent: "flex-end" }}>
+            <Text style={[styles.mediumText]}>계정이 없으신가요?</Text>
+          </View>
+          <TouchableView style={[S.buttonStyles.longButton]} onPress={goSignUp}>
+            <Text style={[styles.bigText]}>시작하기</Text>
+          </TouchableView>
+          <View style={{ flex: 2 }}></View>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -72,5 +188,60 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  textInputContainer: {
+    flex: 1,
+    paddingHorizontal: "5%",
+  },
+  loginText: {
+    fontSize: 35,
+    fontWeight: "bold",
+  },
+  textInput: {
+    flex: 1,
+    backgroundColor: "lightgrey",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    margin: 5,
+    marginBottom: 15,
+    fontSize: 18,
+  },
+  passwordInput: {
+    flex: 1,
+    backgroundColor: "lightgrey",
+    borderRadius: 5,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    paddingHorizontal: 10,
+    marginVertical: 5,
+    marginTop: 15,
+    marginLeft: 5,
+    fontSize: 18,
+  },
+  showPasswordIcon: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "lightgrey",
+    borderRadius: 5,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    paddingRight: 10,
+    marginRight: 5,
+    marginVertical: 5,
+    marginTop: 15,
+  },
+  buttonContainer: {
+    flex: 1,
+    paddingHorizontal: "5%",
+  },
+  bigText: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  mediumText: {
+    textAlign: "center",
+    fontSize: 15,
+    paddingBottom: 10,
   },
 });
