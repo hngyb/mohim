@@ -100,7 +100,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
         textDayFontSize: 14,
         textDayFontWeight: "bold",
         textDisabledColor: "lightgrey",
-        todayTextColor: "#00adf5",
+        selectedDayBackgroundColor: "lightgrey",
         selectedDayTextColor: "#ffffff",
       }}
     />

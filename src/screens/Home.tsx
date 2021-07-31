@@ -11,6 +11,8 @@ import {
 import * as C from "../utils";
 import Icon from "react-native-vector-icons/Ionicons";
 import { TextInput } from "react-native-gesture-handler";
+import moment from "moment"
+import { CustomMarking, MultiDotMarking, MultiDotMarkingProps } from "react-native-calendars";
 
 /*
 Todo
@@ -20,10 +22,8 @@ Todo
  */
 
 export default function Home() {
-  const [markedDates, setMarkedDates] = useState({
-    "2021-07-24": { selected: false, dots: [ {key: "일산교회", color: "blue"},{key: "미디어선교부", color: "red"},{key: "청년회", color: "orange"},{key: "23구역", color: "purple"}]},
-    "2021-07-25": { selected: false, dots: [ {key: "일산교회", color: "blue"},{key: "교회학교", color: "green"} ]},
-  });
+  const [today, setToday] = useState<string>(moment().format('YYYY-MM-DD'));
+  const [markedDates, setMarkedDates] = useState({});
   const [pastSelectedDate, setPastSelectedDate] = useState<string>("");
 
   const onDayPress = useCallback((day: dayType) => {
@@ -34,12 +34,25 @@ export default function Home() {
       [selectedDate]: {...markedDates.[selectedDate], selected: true },
     };
     setMarkedDates(newMark);
-    setPastSelectedDate(selectedDate)
+    if (selectedDate === today) {
+      setPastSelectedDate("");
+    } else{
+      setPastSelectedDate(selectedDate);
+    }
     // 아래 일정 정보 표시
   }, [markedDates]);
 
   useEffect(() => {
     // 서버에서 정보 가져오기 -> markedDates initialize
+    // API 호출
+    /*
+    "YYYY-MM-DD": {dots: [{key: "그룹명", color: "그룹별 색"}]}
+     */
+    setMarkedDates({
+      [today]: {selected: true, selectedColor: "#00adf5"}, // 전개 연산 복사 필요
+      "2021-07-24": { selected: false, dots: [ {key: "일산교회", color: "blue"},{key: "미디어선교부", color: "red"},{key: "청년회", color: "orange"},{key: "23구역", color: "purple"}]},
+      "2021-07-25": { selected: false, dots: [ {key: "일산교회", color: "blue"},{key: "교회학교", color: "green"} ]},
+    })
     SplashScreen.hide();
   }, []);
 
