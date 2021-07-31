@@ -1,15 +1,8 @@
 import React from "react";
 import type { FC, ReactNode } from "react";
-import {
-  StyleSheet,
-  Text,
-  TouchableNativeFeedbackComponent,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { StyleProp, ViewStyle, TextStyle } from "react-native";
 import * as S from "../screens/Styles";
-import { TouchableView } from "./TouchableView";
 
 export type NavigationHeaderProps = {
   title?: string;

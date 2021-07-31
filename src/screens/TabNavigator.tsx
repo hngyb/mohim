@@ -5,6 +5,7 @@ import Color from "color";
 import Icon from "react-native-vector-icons/Ionicons";
 import Home from "./Home";
 import MyPage from "./MyPage";
+import Search from "./Search";
 
 import type { RouteProp, ParamListBase } from "@react-navigation/native";
 import { checkPropTypes } from "prop-types";
@@ -12,6 +13,7 @@ type TabBarIconProps = { focused: boolean; color: string; size: number };
 
 const icons: Record<string, string[]> = {
   Home: ["home", "home-outline"],
+  Search: ["search", "search-outline"],
   MyPage: ["person", "person-outline"],
 };
 const screenOptions = ({
@@ -41,16 +43,22 @@ export default function TabNavigator() {
         activeTintColor: Colors.black,
       }}
       screenOptions={screenOptions}
+      sceneContainerStyle={{ backgroundColor: "white" }}
     >
       <Tab.Screen
         name="Home"
         component={Home}
-        options={{ tabBarLabel: "HOME" }}
+        options={{ tabBarLabel: "홈" }}
+      ></Tab.Screen>
+      <Tab.Screen
+        name="Search"
+        component={Search}
+        options={{ tabBarLabel: "검색" }}
       ></Tab.Screen>
       <Tab.Screen
         name="MyPage"
         component={MyPage}
-        options={{ tabBarLabel: "MY" }}
+        options={{ tabBarLabel: "마이페이지" }}
       ></Tab.Screen>
     </Tab.Navigator>
   );
