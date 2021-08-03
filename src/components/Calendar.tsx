@@ -1,7 +1,8 @@
-import React, { FC, ComponentProps } from "react";
+import React, { FC } from "react";
 import {
   Calendar,
   CalendarBaseProps,
+  CalendarList,
   CalendarMarkingProps,
   MultiDotMarking,
 } from "react-native-calendars";
@@ -9,7 +10,6 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { Avatar, Card } from "react-native-paper";
 import { LocaleConfig } from "react-native-calendars";
 import { Colors } from "react-native-paper";
-import * as C from "../utils";
 import Color from "color";
 
 LocaleConfig.locales["kor"] = {
@@ -75,7 +75,9 @@ export const CalendarView: FC<CalendarViewProps> = ({
   markedDates,
 }) => {
   return (
-    <Calendar
+    <CalendarList
+      horizontal
+      pagingEnabled={true}
       markingType="multi-dot"
       onDayPress={onDayPress}
       markedDates={markedDates}
@@ -84,13 +86,15 @@ export const CalendarView: FC<CalendarViewProps> = ({
         // calendar
         calendarBackground: "white",
         arrowColor: "lightgrey",
-        // month
-        textMonthFontWeight: "bold",
-        textMonthFontSize: 20,
-        // day names
+        // month, day header
         "stylesheet.calendar.header": {
           dayTextAtIndex0: {
             color: Colors.red500,
+          },
+          monthText: {
+            fontWeight: "bold",
+            fontSize: 20,
+            flex: 1,
           },
         },
         textSectionTitleColor: "lightgrey",
