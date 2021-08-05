@@ -24,8 +24,8 @@ import axios from "axios";
 
 /*
 Todo
-1. belongTo 와 follow 서버와 동기화 추가하기
 2. 성도 인증할 때 사용자가 그룹 색깔도 함께 설정
+3. 로컬 디비에서 deleted 데이터 삭제 로직 추가
  */
 
 export default function Home() {
@@ -37,6 +37,7 @@ export default function Home() {
   const onDayPress = useCallback(
     (day: dayType) => {
       const selectedDate = day.dateString;
+      // markDates 업데이트
       const newMark = {
         ...markedDates,
         [pastSelectedDate]: {
@@ -58,7 +59,7 @@ export default function Home() {
         .sorted("startTime");
       setAgendaData(toAgendaType(agenda));
     },
-    [markedDates]
+    [markedDates, agendaData]
   );
 
   const toSetMarkedDatesObjects = useCallback(
@@ -116,7 +117,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // 샘플 데이터
+    // 샘플 데이터 생성
     realm.write(() => {
       const group1 = realm.create(
         "Groups",
@@ -162,7 +163,59 @@ export default function Home() {
       latestUpdatedDate: string | null,
       renewUpdatedDate: string
     ) {
-      const followGroupIds = await realm.objects("Follows");
+      // const GroupId = 1;
+      // axios.post(
+      //   "/api/follows/",
+      //   {
+      //     GroupId,
+      //   },
+      //   { headers: { Authorization: `Bearer ${accessToken}` } }
+      // );
+
+      // belongTo 서버 동기화
+      const belongToGroups = await axios.get("/api/belong-tos/", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const belongToGroupsArray = belongToGroups.data;
+      belongToGroupsArray.forEach((data: any) => {
+        realm.write(() => {
+          const belongToGroup = realm.create(
+            "BelongTos",
+            {
+              groupId: data.GroupId,
+              createdAt: data.createdAt,
+              updatedAt: data.updatedAt,
+              deletedAt: data.deletedAt,
+            },
+            Realm.UpdateMode.Modified
+          );
+        });
+      });
+
+      // follow 서버 동기화
+      const followGroups = await axios.get("/api/follows/", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const followGroupsArray = followGroups.data;
+      followGroupsArray.forEach((data: any) => {
+        realm.write(() => {
+          const followGroup = realm.create(
+            "Follows",
+            {
+              groupId: data.GroupId,
+              createdAt: data.createdAt,
+              updatedAt: data.updatedAt,
+              deletedAt: data.deletedAt,
+            },
+            Realm.UpdateMode.Modified
+          );
+        });
+      });
+
+      // follow 그룹에 속한 이벤트 동기화
+      const followGroupIds = await realm
+        .objects("Follows")
+        .filtered("deletedAt == null");
       await followGroupIds.forEach(async (groupId: any) => {
         const response = await axios.get("/api/events/", {
           params: {
@@ -226,6 +279,9 @@ export default function Home() {
       .filtered(`date == "${today}" and deletedAt == null`)
       .sorted("startTime");
     setAgendaData(toAgendaType(todayAgenda));
+
+    // deleted data 지우기
+
     SplashScreen.hide();
   }, []);
 
