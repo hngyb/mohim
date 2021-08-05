@@ -5,6 +5,7 @@ export const GroupSchema = {
     name: "string",
     church: "string",
     isPublic: "bool",
+    color: "string?",
   },
   primaryKey: "id",
 };

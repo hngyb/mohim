@@ -9,9 +9,11 @@ export const EventSchema = {
     endTime: "string?",
     location: "string?",
     notice: "string?",
-    contents: "string?",
+    memo: "string?",
+    color: { type: "string", default: "lightgrey" },
     createdAt: { type: "date", default: Date() },
     updatedAt: { type: "date", default: Date() },
+    deletedAt: { type: "date?" },
   },
   primaryKey: "id",
 };

@@ -19,19 +19,20 @@ import * as U from "../utils";
 import Icon from "react-native-vector-icons/Ionicons";
 import moment from "moment";
 import realm from "../models";
+import Realm from "realm";
 import axios from "axios";
 
 /*
 Todo
-1. 캘린더 구현
-2. search bar 구현 in header
-2. 서버에서 정보 가져오기
+1. belongTo 와 follow 서버와 동기화 추가하기
+2. 성도 인증할 때 사용자가 그룹 색깔도 함께 설정
  */
 
 export default function Home() {
   const [today, setToday] = useState<string>(moment().format("YYYY-MM-DD"));
   const [markedDates, setMarkedDates] = useState({});
   const [pastSelectedDate, setPastSelectedDate] = useState<string>();
+  const [agendaData, setAgendaData] = useState<Array<any>>([]);
 
   const onDayPress = useCallback(
     (day: dayType) => {
@@ -50,18 +51,119 @@ export default function Home() {
       } else {
         setPastSelectedDate(selectedDate);
       }
-      // 아래 일정 정보 표시
+      // 아젠다 업데이트
+      const agenda = realm
+        .objects("Events")
+        .filtered(`date == "${selectedDate}"`)
+        .sorted("startTime");
+      setAgendaData(toAgendaType(agenda));
     },
     [markedDates]
   );
 
+  const toSetMarkedDatesObjects = useCallback(
+    (arr: Realm.Results<Realm.Object | any>) => {
+      const objects: any = {};
+      objects[today] = { selected: true, selectedColor: "#00adf5", dots: [] };
+      for (let i = 0; i < arr.length; ++i) {
+        const objectKey = arr[i].date;
+        const groupId = arr[i].groupId.toString();
+        const color = arr[i].color;
+        const selected = objectKey === today ? true : false;
+        objectKey in objects
+          ? (objects[objectKey] = {
+              ...objects[objectKey],
+              dots: [
+                ...objects[objectKey].dots,
+                { key: groupId, color: color },
+              ],
+            })
+          : (objects[objectKey] = {
+              selected: selected,
+              dots: [{ key: groupId, color: color }],
+            });
+      }
+
+      return objects;
+    },
+    []
+  );
+
+  const toAgendaType = useCallback((arr: Realm.Results<Realm.Object | any>) => {
+    const agenda = [];
+    for (let i = 0; i < arr.length; ++i) {
+      const object: any = {};
+      const groupInfo: any = realm.objectForPrimaryKey(
+        "Groups",
+        arr[i].groupId
+      );
+      const groupName = groupInfo.name;
+      object.title = arr[i].title;
+      object.data = [
+        {
+          group: groupName,
+          location: arr[i].location,
+          start: arr[i].startTime.slice(0, 5),
+          end: arr[i].endTime.slice(0, 5),
+          notice: arr[i].notice,
+          memo: arr[i].memo,
+          color: arr[i].color,
+        },
+      ];
+      agenda.push(object);
+    }
+    return agenda;
+  }, []);
+
   useEffect(() => {
+    // 샘플 데이터
+    realm.write(() => {
+      const group1 = realm.create(
+        "Groups",
+        {
+          id: 1,
+          name: "일산교회",
+          church: "일산교회",
+          isPublic: true,
+          color: "red",
+        },
+        Realm.UpdateMode.Modified
+      );
+      const group2 = realm.create(
+        "Groups",
+        {
+          id: 2,
+          name: "청년회",
+          church: "일산교회",
+          isPublic: true,
+          color: "blue",
+        },
+        Realm.UpdateMode.Modified
+      );
+      const follow1 = realm.create(
+        "Follows",
+        {
+          groupId: 1,
+        },
+        Realm.UpdateMode.Modified
+      );
+      const follow2 = realm.create(
+        "Follows",
+        {
+          groupId: 2,
+        },
+        Realm.UpdateMode.Modified
+      );
+    });
+
+    // belongTo 와 follow 서버와 동기화 추가하기
     async function getDataFromServer(
       accessToken: string,
-      latestUpdatedDate: string | null
+      latestUpdatedDate: string | null,
+      renewUpdatedDate: string
     ) {
       const followGroupIds = await realm.objects("Follows");
-      followGroupIds.forEach(async (groupId: any) => {
+      await followGroupIds.forEach(async (groupId: any) => {
         const response = await axios.get("/api/events/", {
           params: {
             groupId: groupId.groupId,
@@ -71,119 +173,62 @@ export default function Home() {
         });
         const toBeUpdatedData = response.data;
         toBeUpdatedData.forEach((data: any) => {
+          const groupInfo: any = realm.objectForPrimaryKey(
+            "Groups",
+            data.GroupId
+          );
+          const groupColor = groupInfo.color;
           realm.write(() => {
-            const event = realm.create("Events", {
-              id: data.id,
-              groupId: data.GroupId,
-              title: data.title,
-              date: data.date.split("T")[0],
-              startTime: data.startTime,
-              endTime: data.endTime,
-              location: data.location,
-              notice: data.notice,
-              contents: data.contents,
-              createdAt: data.createdAt,
-              updatedAt: data.updatedAt,
-            });
+            const event = realm.create(
+              "Events",
+              {
+                id: data.id,
+                groupId: data.GroupId,
+                title: data.title,
+                date: data.date.split("T")[0],
+                startTime: data.startTime,
+                endTime: data.endTime,
+                location: data.location,
+                notice: data.notice,
+                color: groupColor,
+                createdAt: data.createdAt,
+                updatedAt: data.updatedAt,
+                deletedAt: data.deletedAt,
+              },
+              Realm.UpdateMode.Modified
+            );
           });
         });
       });
+      await U.writeToStorage("latestUpdatedDate", renewUpdatedDate);
     }
     // 로컬 DB 와 서버 DB 동기화
     U.readFromStorage("accessJWT").then((accessToken) => {
       U.readFromStorage("latestUpdatedDate")
         .then((value) => {
           const latestUpdatedDate = value.length === 0 ? null : value;
-          getDataFromServer(accessToken, latestUpdatedDate);
+          const renewUpdatedDate = moment().format("YYYY-MM-DD");
+          getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate);
         })
         .catch((e) => console.log(e));
     });
 
-    /*
-    "YYYY-MM-DD": {dots: [{key: "그룹명", color: "그룹별 색"}]}
-     */
-    const toBeMarkedDates = realm.objects("Events");
-    console.log(toBeMarkedDates);
-    setMarkedDates({
-      [today]: { selected: true, selectedColor: "#00adf5" }, // 전개 연산 복사 필요
-      "2021-07-24": {
-        selected: false,
-        dots: [
-          { key: "일산교회", color: "blue" },
-          { key: "미디어선교부", color: "red" },
-          { key: "청년회", color: "orange" },
-          { key: "23구역", color: "purple" },
-        ],
-      },
-      "2021-07-25": {
-        selected: false,
-        dots: [
-          { key: "일산교회", color: "blue" },
-          { key: "교회학교", color: "green" },
-        ],
-      },
-    });
+    // 캘린더 마킹
+    const toBeMarkedDates = realm
+      .objects("Events")
+      .filtered("deletedAt == null");
+    const toBeMarkedDatesObjects = toSetMarkedDatesObjects(toBeMarkedDates);
+    setMarkedDates(toBeMarkedDatesObjects);
+
+    // 오늘의 아젠다 불러오기
+    const todayAgenda = realm
+      .objects("Events")
+      .filtered(`date == "${today}" and deletedAt == null`)
+      .sorted("startTime");
+    setAgendaData(toAgendaType(todayAgenda));
     SplashScreen.hide();
   }, []);
 
-  const DATA = [
-    {
-      title: "청년회 전체교제",
-      data: [
-        {
-          group: "청년회",
-          attendees: "참석자",
-          location: "교회당",
-          start: "오후 7시",
-          end: "오후 9시",
-          summary: "설명",
-          color: "red",
-        },
-      ],
-    },
-    {
-      title: "청년회 전체교제",
-      data: [
-        {
-          group: "청년회",
-          attendees: "참석자",
-          location: "교회당",
-          start: "오후 7시",
-          end: "오후 9시",
-          summary: "설명",
-          color: "blue",
-        },
-      ],
-    },
-    {
-      title: "청년회 전체교제",
-      data: [
-        {
-          group: "청년회",
-          attendees: "참석자",
-          location: "교회당",
-          start: "오후 7시",
-          end: "오후 9시",
-          summary: "설명",
-          color: "green",
-        },
-      ],
-    },
-    {
-      title: "청년회 전체교제",
-      data: [
-        {
-          group: "청년회",
-          attendees: "참석자",
-          location: "교회당",
-          start: "오후 7시",
-          end: "오후 9시",
-          summary: "설명",
-          color: "yellow",
-        },
-      ],
-    },
-  ];
   return (
     <SafeAreaView style={[styles.container]}>
       <NavigationHeader
@@ -205,7 +250,7 @@ export default function Home() {
         </View>
         <SectionList
           stickySectionHeadersEnabled={false}
-          sections={DATA}
+          sections={agendaData}
           renderItem={({ item, section }) => (
             <Agenda title={section.title} data={item} />
           )}
