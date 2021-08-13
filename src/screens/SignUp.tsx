@@ -39,7 +39,7 @@ export default function SignUp() {
   const dispatch = useDispatch();
 
   const goBack = useCallback(() => navigation.navigate("Auth"), []);
-  const goTabNavigator = useCallback(() => {
+  const goOnboarding = useCallback(() => {
     if (email !== "" && name !== "" && password !== "") {
       axios
         .post("/api/users", {
@@ -61,7 +61,7 @@ export default function SignUp() {
             .then((tokens) => {
               dispatch(A.setJWT(tokens.accessToken, tokens.refreshToken));
               dispatch(L.loginAction({ email, name, password }));
-              navigation.navigate("TabNavigator");
+              navigation.navigate("OnBoarding");
             })
             .catch((e) => {
               Alert.alert("비정상적인 접근입니다.");
@@ -214,7 +214,7 @@ export default function SignUp() {
                     : "lightgrey",
                 },
               ]}
-              onPress={goTabNavigator}
+              onPress={goOnboarding}
               disabled={buttonDisabled}
             >
               <Text

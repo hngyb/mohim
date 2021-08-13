@@ -9,7 +9,7 @@ export const reducer = (state: T.State = initialState, action: T.Actions) => {
     case "@asyncStorage/setUpdatedDate":
       return {
         ...state,
-        accessJWT: action.latestUpdatedDate,
+        latestUpdatedDate: action.latestUpdatedDate,
       };
   }
   return state;

@@ -6,9 +6,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import Home from "./Home";
 import MyPage from "./MyPage";
 import Search from "./Search";
-
 import type { RouteProp, ParamListBase } from "@react-navigation/native";
-import { checkPropTypes } from "prop-types";
+
 type TabBarIconProps = { focused: boolean; color: string; size: number };
 
 const icons: Record<string, string[]> = {

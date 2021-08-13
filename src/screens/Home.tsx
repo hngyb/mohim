@@ -16,11 +16,13 @@ import {
   Agenda,
 } from "../components";
 import * as U from "../utils";
+import * as L from "../store/latestUpdate";
 import Icon from "react-native-vector-icons/Ionicons";
 import moment from "moment";
 import realm from "../models";
 import Realm from "realm";
 import axios from "axios";
+import { useDispatch } from "react-redux";
 
 /*
 Todo
@@ -33,6 +35,7 @@ export default function Home() {
   const [markedDates, setMarkedDates] = useState({});
   const [pastSelectedDate, setPastSelectedDate] = useState<string>();
   const [agendaData, setAgendaData] = useState<Array<any>>([]);
+  const dispatch = useDispatch();
 
   const onDayPress = useCallback(
     (day: dayType) => {
@@ -254,6 +257,7 @@ export default function Home() {
         });
       });
       await U.writeToStorage("latestUpdatedDate", renewUpdatedDate);
+      dispatch(L.setUpdatedDate(renewUpdatedDate));
     }
     // 로컬 DB 와 서버 DB 동기화
     U.readFromStorage("accessJWT").then((accessToken) => {

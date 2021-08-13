@@ -1,10 +1,10 @@
 import type { Action } from "redux";
 
 export type State = {
-  latestUpdatedDate: Date | null;
+  latestUpdatedDate: string | null;
 };
 
 export type SetUpdatedDateAction = Action<"@asyncStorage/setUpdatedDate"> & {
-  latestUpdatedDate: Date;
+  latestUpdatedDate: string | null;
 };
 export type Actions = SetUpdatedDateAction;
