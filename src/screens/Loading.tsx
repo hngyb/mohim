@@ -38,14 +38,16 @@ export default function () {
             })
             .catch((e) => {
               SplashScreen.hide(); // splashScreen 닫기
-              goAuth(); // refresh 토큰 만료 -> 재로그인 과정으로 이동
+              navigation.navigate("OnBoarding");
+              // goAuth(); // refresh 토큰 만료 -> 재로그인 과정으로 이동
             });
         });
       } else {
         // 로그인 정보가 없을 때
         const id = setTimeout(() => {
           SplashScreen.hide();
-          goAuth(); // 첫 로그인 화면으로 이동
+          navigation.navigate("OnBoarding");
+          // goAuth(); // 첫 로그인 화면으로 이동
         }, 2000);
         return () => clearTimeout(id);
       }

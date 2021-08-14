@@ -9,10 +9,17 @@ import { Colors } from "react-native-paper";
 import Color from "color";
 import DropDownPicker from "react-native-dropdown-picker";
 import { isEmpty } from "lodash";
+import { useDispatch, useStore } from "react-redux";
+import * as O from "../store/onBoarding";
 
 export default function SetService() {
+  const store = useStore();
+  const dispatch = useDispatch();
+  const { church, sex, district, group, services, inviteCode } =
+    store.getState().onBoarding;
   const [open, setOpen] = useState(false);
-  const [SelectedServices, setSelectedServices] = useState<Array<any>>([]);
+  const [selectedServices, setSelectedServices] =
+    useState<Array<any>>(services);
   const [items, setItems] = useState([
     {
       label: "전도인",
@@ -114,10 +121,13 @@ export default function SetService() {
   }, []);
 
   useEffect(() => {
-    isEmpty(SelectedServices)
+    dispatch(
+      O.setProfile(church, sex, district, group, selectedServices, inviteCode)
+    );
+    isEmpty(selectedServices)
       ? setButtonDisabled(true)
       : setButtonDisabled(false);
-  }, [SelectedServices]);
+  }, [selectedServices]);
 
   return (
     <SafeAreaView style={[styles.container]}>
@@ -149,7 +159,7 @@ export default function SetService() {
             min={0}
             max={10}
             open={open}
-            value={SelectedServices}
+            value={selectedServices}
             items={items}
             setOpen={setOpen}
             setValue={setSelectedServices}

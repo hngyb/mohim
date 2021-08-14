@@ -9,9 +9,15 @@ import { Picker } from "@react-native-picker/picker";
 import * as S from "./Styles";
 import { Colors } from "react-native-paper";
 import Color from "color";
+import { useDispatch, useStore } from "react-redux";
+import * as O from "../store/onBoarding";
 
 export default function SetDistrict() {
-  const [selectedDistrict, setSelectedDistrict] = useState<string>("11");
+  const store = useStore();
+  const dispatch = useDispatch();
+  const { church, sex, district, group, services, inviteCode } =
+    store.getState().onBoarding;
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(district);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const navigation = useNavigation();
   const goBack = useCallback(
@@ -55,9 +61,19 @@ export default function SetDistrict() {
               justifyContent: "center",
             }}
             selectedValue={selectedDistrict}
-            onValueChange={(itemValue, itemIndex) =>
-              setSelectedDistrict(itemValue)
-            }
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedDistrict(itemValue);
+              dispatch(
+                O.setProfile(
+                  church,
+                  sex,
+                  itemValue,
+                  group,
+                  services,
+                  inviteCode
+                )
+              );
+            }}
           >
             <Picker.Item label="11구역" value="11" />
             <Picker.Item label="12구역" value="12" />

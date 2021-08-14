@@ -8,9 +8,15 @@ import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
 import { Colors } from "react-native-paper";
 import Color from "color";
+import { useDispatch, useStore } from "react-redux";
+import * as O from "../store/onBoarding";
 
 export default function SetSex() {
-  const [selectedSex, setSelectedSex] = useState("");
+  const store = useStore();
+  const dispatch = useDispatch();
+  const { church, sex, district, group, services, inviteCode } =
+    store.getState().onBoarding;
+  const [selectedSex, setSelectedSex] = useState<string>(sex);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const navigation = useNavigation();
   const goBack = useCallback(
@@ -21,9 +27,6 @@ export default function SetSex() {
     navigation.navigate("SetDistrict");
   }, []);
 
-  useEffect(() => {
-    SplashScreen.hide();
-  }, []);
   useEffect(() => {
     selectedSex === "" ? setButtonDisabled(true) : setButtonDisabled(false);
   }, [selectedSex]);
@@ -63,7 +66,19 @@ export default function SetSex() {
               borderColor: selectedSex === "brother" ? "black" : "lightgrey",
               borderWidth: 3,
             }}
-            onPress={() => setSelectedSex("brother")}
+            onPress={() => {
+              setSelectedSex("brother");
+              dispatch(
+                O.setProfile(
+                  church,
+                  "brother",
+                  district,
+                  group,
+                  services,
+                  inviteCode
+                )
+              );
+            }}
           >
             <Text style={[styles.text]}>형제</Text>
           </TouchableOpacity>
@@ -74,7 +89,19 @@ export default function SetSex() {
               borderColor: selectedSex === "sister" ? "black" : "lightgrey",
               borderWidth: 3,
             }}
-            onPress={() => setSelectedSex("sister")}
+            onPress={() => {
+              setSelectedSex("sister");
+              dispatch(
+                O.setProfile(
+                  church,
+                  "sister",
+                  district,
+                  group,
+                  services,
+                  inviteCode
+                )
+              );
+            }}
           >
             <Text style={[styles.text]}>자매</Text>
           </TouchableOpacity>

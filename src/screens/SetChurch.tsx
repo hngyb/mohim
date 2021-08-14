@@ -8,10 +8,16 @@ import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
 import { Colors } from "react-native-paper";
 import Color from "color";
+import { useDispatch, useStore } from "react-redux";
+import * as O from "../store/onBoarding";
 
 export default function SetChurch() {
+  const store = useStore();
   const navigation = useNavigation();
-  const [selectedChurch, setSelectedChurch] = useState<string>("일산교회");
+  const dispatch = useDispatch();
+  const { church, sex, district, group, services, inviteCode } =
+    store.getState().onBoarding;
+  const [selectedChurch, setSelectedChurch] = useState<string>(church);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const goNext = useCallback(() => {
     navigation.navigate("SetSex");

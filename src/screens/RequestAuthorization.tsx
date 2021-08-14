@@ -8,10 +8,18 @@ import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
 import { Colors } from "react-native-paper";
 import Color from "color";
+import { useDispatch, useStore } from "react-redux";
+import * as O from "../store/onBoarding";
 
 export default function RequestAuthorization() {
+  const store = useStore();
+  const dispatch = useDispatch();
+  const { church, sex, district, group, services } =
+    store.getState().onBoarding;
   const navigation = useNavigation();
-  const [inviteCode, setInviteCode] = useState<string>("");
+  const [inviteCode, setInviteCode] = useState<string>(
+    store.getState().onBoarding.inviteCode
+  );
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const goBack = useCallback(
     () => navigation.canGoBack() && navigation.goBack(),
@@ -20,10 +28,9 @@ export default function RequestAuthorization() {
   const goNext = useCallback(() => {
     navigation.navigate("TabNavigator");
   }, []);
+
   useEffect(() => {
-    SplashScreen.hide();
-  }, []);
-  useEffect(() => {
+    dispatch(O.setProfile(church, sex, district, group, services, inviteCode));
     inviteCode === "" ? setButtonDisabled(true) : setButtonDisabled(false);
   }, [inviteCode]);
 
@@ -55,6 +62,7 @@ export default function RequestAuthorization() {
           }}
         >
           <TextInput
+            defaultValue={inviteCode}
             style={[styles.text]}
             onChangeText={setInviteCode}
             placeholder="초대코드 입력"

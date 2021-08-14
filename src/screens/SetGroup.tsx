@@ -9,9 +9,15 @@ import { Picker } from "@react-native-picker/picker";
 import * as S from "./Styles";
 import { Colors } from "react-native-paper";
 import Color from "color";
+import * as O from "../store/onBoarding";
+import { useDispatch, useStore } from "react-redux";
 
 export default function SetGroup() {
-  const [selectedGroup, setSelectedGroup] = useState<string>("청년회");
+  const store = useStore();
+  const dispatch = useDispatch();
+  const { church, sex, district, group, services, inviteCode } =
+    store.getState().onBoarding;
+  const [selectedGroup, setSelectedGroup] = useState<string>(group);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const navigation = useNavigation();
   const goBack = useCallback(
@@ -53,9 +59,19 @@ export default function SetGroup() {
               justifyContent: "center",
             }}
             selectedValue={selectedGroup}
-            onValueChange={(itemValue, itemIndex) =>
-              setSelectedGroup(itemValue)
-            }
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedGroup(itemValue);
+              dispatch(
+                O.setProfile(
+                  church,
+                  sex,
+                  district,
+                  itemValue,
+                  services,
+                  inviteCode
+                )
+              );
+            }}
           >
             <Picker.Item label="청년회" value="청년회" />
             <Picker.Item label="봉사회" value="봉사회" />
