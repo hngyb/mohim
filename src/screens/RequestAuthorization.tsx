@@ -106,8 +106,6 @@ export default function RequestAuthorization() {
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1 }}></View>
           <View style={{ flex: 2 }}></View>
-        </View>
-        <View style={{ flex: 2 }}>
           <View style={{ flex: 1 }}>
             <TouchableView
               style={[
@@ -131,6 +129,8 @@ export default function RequestAuthorization() {
               </Text>
             </TouchableView>
           </View>
+        </View>
+        <View style={{ flex: 1 }}>
           <View style={{ flex: 1 }}></View>
           <TouchableView
             style={[S.buttonStyles.longButton]}

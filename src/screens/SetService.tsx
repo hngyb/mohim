@@ -165,8 +165,8 @@ export default function SetService() {
               S.buttonStyles.longButton,
               {
                 backgroundColor: buttonDisabled
-                  ? Color(Colors.grey300).alpha(0.5).string()
-                  : "lightgrey",
+                  ? Color(S.secondayColor).alpha(0.5).string()
+                  : S.secondayColor,
               },
             ]}
             disabled={buttonDisabled}
