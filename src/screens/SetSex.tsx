@@ -63,7 +63,8 @@ export default function SetSex() {
             style={{
               flex: 1,
               marginRight: 10,
-              borderColor: selectedSex === "brother" ? "black" : "lightgrey",
+              borderColor:
+                selectedSex === "brother" ? S.primaryColor : S.secondayColor,
               borderWidth: 3,
             }}
             onPress={() => {
@@ -86,7 +87,8 @@ export default function SetSex() {
             style={{
               flex: 1,
               marginLeft: 10,
-              borderColor: selectedSex === "sister" ? "black" : "lightgrey",
+              borderColor:
+                selectedSex === "sister" ? S.primaryColor : S.secondayColor,
               borderWidth: 3,
             }}
             onPress={() => {
@@ -120,8 +122,8 @@ export default function SetSex() {
               S.buttonStyles.longButton,
               {
                 backgroundColor: buttonDisabled
-                  ? Color(Colors.grey300).alpha(0.5).string()
-                  : "lightgrey",
+                  ? Color(S.secondayColor).alpha(0.5).string()
+                  : S.secondayColor,
               },
             ]}
             disabled={buttonDisabled}
@@ -156,21 +158,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontSize: 35,
-    fontWeight: "bold",
+    fontFamily: S.fontBold,
+    fontSize: 30,
   },
   text: {
+    fontFamily: S.fontMedium,
     textAlign: "center",
-    backgroundColor: "lightgrey",
-    fontWeight: "bold",
+    backgroundColor: S.secondayColor,
     color: "black",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
+    fontFamily: S.fontBold,
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
   },
 });

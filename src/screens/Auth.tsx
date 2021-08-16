@@ -141,16 +141,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   bigText: {
+    fontFamily: S.fontBold,
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
   },
   mediumText: {
+    fontFamily: S.fontMedium,
     textAlign: "center",
     fontSize: 15,
     paddingBottom: 10,
   },
   smallText: {
+    fontFamily: S.fontLight,
     textAlign: "center",
     fontSize: 11,
   },

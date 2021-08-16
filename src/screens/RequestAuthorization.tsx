@@ -10,6 +10,10 @@ import { Colors } from "react-native-paper";
 import Color from "color";
 import { useDispatch, useStore } from "react-redux";
 import * as O from "../store/onBoarding";
+import * as U from "../utils";
+import realm from "../models";
+import Realm from "realm";
+import axios from "axios";
 
 export default function RequestAuthorization() {
   const store = useStore();
@@ -25,7 +29,33 @@ export default function RequestAuthorization() {
     () => navigation.canGoBack() && navigation.goBack(),
     []
   );
-  const goNext = useCallback(() => {
+  const requestAuthorization = useCallback(() => {
+    // inviteCode 유효성 검사
+    U.readFromStorage("accessJWT").then((accessToken) => {
+      axios
+        .post(
+          "/api/users/request-authorization",
+          {
+            inviteCode: inviteCode,
+          },
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        )
+        .then((response) => {
+          if (response.data.id === inviteCode) {
+            console.log("authorized");
+            // realm 저장하고 서버에 post (authorization = True)
+            navigation.navigate("TabNavigator");
+          }
+        })
+        .catch((e) => {
+          console.log(e); // 에러코드에 따라 accesstoken 만료랑 초대코드 잘못된 걸로 나누어서 처리
+          // error code === 401 -> refreshToken으로 accessToken 재발급후  request 재진행
+          // error code === 400 -> 잘못된 초대코드 모달창 띄우기
+        });
+    });
+  }, [inviteCode]);
+
+  const doNextTime = useCallback(() => {
     navigation.navigate("TabNavigator");
   }, []);
 
@@ -75,12 +105,7 @@ export default function RequestAuthorization() {
       <View style={[styles.nextContainer]}>
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1 }}></View>
-          <View style={{ flex: 2 }}>
-            <Text style={[styles.mediumText]}>초대코드를 갖고 계시면,</Text>
-            <Text style={[styles.mediumText]}>
-              관리자 승인 없이 바로 이용하실 수 있습니다.
-            </Text>
-          </View>
+          <View style={{ flex: 2 }}></View>
         </View>
         <View style={{ flex: 2 }}>
           <View style={{ flex: 1 }}>
@@ -89,12 +114,12 @@ export default function RequestAuthorization() {
                 S.buttonStyles.longButton,
                 {
                   backgroundColor: buttonDisabled
-                    ? Color(Colors.grey300).alpha(0.5).string()
-                    : "lightgrey",
+                    ? Color(S.secondayColor).alpha(0.5).string()
+                    : S.secondayColor,
                 },
               ]}
               disabled={buttonDisabled}
-              onPress={goNext}
+              onPress={requestAuthorization}
             >
               <Text
                 style={[
@@ -102,13 +127,16 @@ export default function RequestAuthorization() {
                   { color: buttonDisabled ? Colors.grey400 : "black" },
                 ]}
               >
-                시작하기
+                성도 인증하기
               </Text>
             </TouchableView>
           </View>
           <View style={{ flex: 1 }}></View>
-          <TouchableView style={[S.buttonStyles.longButton]} onPress={goNext}>
-            <Text style={[styles.nextText]}>초대코드 없이 시작하기</Text>
+          <TouchableView
+            style={[S.buttonStyles.longButton]}
+            onPress={doNextTime}
+          >
+            <Text style={[styles.nextText]}>다음에 하기</Text>
           </TouchableView>
           <View style={{ flex: 2 }}></View>
         </View>
@@ -130,27 +158,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontSize: 35,
-    fontWeight: "bold",
+    fontFamily: S.fontBold,
+    fontSize: 30,
   },
   text: {
     flex: 1,
     textAlign: "center",
-    backgroundColor: "lightgrey",
-    fontWeight: "bold",
+    backgroundColor: S.secondayColor,
+    fontFamily: S.fontMedium,
     color: "grey",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
+    fontFamily: S.fontBold,
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
-  },
-  mediumText: {
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

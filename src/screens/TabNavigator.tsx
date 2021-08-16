@@ -7,6 +7,7 @@ import Home from "./Home";
 import MyPage from "./MyPage";
 import Search from "./Search";
 import type { RouteProp, ParamListBase } from "@react-navigation/native";
+import * as S from "./Styles";
 
 type TabBarIconProps = { focused: boolean; color: string; size: number };
 
@@ -38,8 +39,11 @@ export default function TabNavigator() {
   return (
     <Tab.Navigator
       tabBarOptions={{
-        style: { backgroundColor: Colors.grey300 },
+        style: { backgroundColor: S.secondayColor },
         activeTintColor: Colors.black,
+        labelStyle: {
+          fontFamily: S.fontMedium,
+        },
       }}
       screenOptions={screenOptions}
       sceneContainerStyle={{ backgroundColor: "white" }}

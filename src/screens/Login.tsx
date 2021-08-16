@@ -152,8 +152,8 @@ export default function Login() {
                 S.buttonStyles.longButton,
                 {
                   backgroundColor: buttonDisabled
-                    ? Color(Colors.grey300).alpha(0.5).string()
-                    : "lightgrey",
+                    ? Color(S.secondayColor).alpha(0.5).string()
+                    : S.secondayColor,
                 },
               ]}
               onPress={goTabNavigator}
@@ -194,12 +194,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   loginText: {
+    fontFamily: S.fontBold,
     fontSize: 35,
-    fontWeight: "bold",
   },
   textInput: {
+    fontFamily: S.fontMedium,
     flex: 1,
-    backgroundColor: "lightgrey",
+    backgroundColor: S.secondayColor,
     borderRadius: 5,
     paddingHorizontal: 10,
     margin: 5,
@@ -207,8 +208,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   passwordInput: {
+    fontFamily: S.fontMedium,
     flex: 1,
-    backgroundColor: "lightgrey",
+    backgroundColor: S.secondayColor,
     borderRadius: 5,
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
   showPasswordIcon: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor: "lightgrey",
+    backgroundColor: S.secondayColor,
     borderRadius: 5,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
@@ -235,11 +237,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   bigText: {
+    fontFamily: S.fontBold,
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
   },
   mediumText: {
+    fontFamily: S.fontMedium,
     textAlign: "center",
     fontSize: 15,
     paddingBottom: 10,

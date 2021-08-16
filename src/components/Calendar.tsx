@@ -6,11 +6,9 @@ import {
   CalendarMarkingProps,
   MultiDotMarking,
 } from "react-native-calendars";
-import { Text, TouchableOpacity, View } from "react-native";
-import { Avatar, Card } from "react-native-paper";
 import { LocaleConfig } from "react-native-calendars";
 import { Colors } from "react-native-paper";
-import Color from "color";
+import * as S from "../screens/Styles";
 
 LocaleConfig.locales["kor"] = {
   monthNames: [
@@ -84,50 +82,29 @@ export const CalendarView: FC<CalendarViewProps> = ({
       monthFormat={"yyyy년 MM월"}
       theme={{
         // calendar
-        calendarBackground: "white",
-        arrowColor: "lightgrey",
         // month, day header
         "stylesheet.calendar.header": {
           dayTextAtIndex0: {
             color: Colors.red500,
           },
           monthText: {
-            fontWeight: "bold",
+            textAlign: "center",
+            fontFamily: S.fontBold,
             fontSize: 20,
             flex: 1,
           },
         },
-        textSectionTitleColor: "lightgrey",
+        textSectionTitleColor: S.secondayColor,
+        textDayFontFamily: S.fontMedium,
+        textDayFontWeight: "500",
         textDayHeaderFontSize: 12,
-        textDayHeaderFontWeight: "500",
         // dates
         textDayFontSize: 14,
-        textDayFontWeight: "bold",
-        textDisabledColor: "lightgrey",
-        selectedDayBackgroundColor: "lightgrey",
+        textDayHeaderFontFamily: S.fontBold,
+        textDisabledColor: S.secondayColor,
+        selectedDayBackgroundColor: S.secondayColor,
         selectedDayTextColor: "#ffffff",
       }}
     />
-  );
-};
-
-export const renderItem = (item) => {
-  return (
-    <TouchableOpacity style={{ marginRight: 10, marginTop: 17 }}>
-      <Card>
-        <Card.Content>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text>{item.name}</Text>
-            <Avatar.Text label="J" />
-          </View>
-        </Card.Content>
-      </Card>
-    </TouchableOpacity>
   );
 };

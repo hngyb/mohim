@@ -17,6 +17,7 @@ import {
 } from "../components";
 import * as U from "../utils";
 import * as L from "../store/latestUpdate";
+import * as S from "./Styles";
 import Icon from "react-native-vector-icons/Ionicons";
 import moment from "moment";
 import realm from "../models";
@@ -68,7 +69,11 @@ export default function Home() {
   const toSetMarkedDatesObjects = useCallback(
     (arr: Realm.Results<Realm.Object | any>) => {
       const objects: any = {};
-      objects[today] = { selected: true, selectedColor: "#00adf5", dots: [] };
+      objects[today] = {
+        selected: true,
+        selectedColor: S.primaryColor,
+        dots: [],
+      };
       for (let i = 0; i < arr.length; ++i) {
         const objectKey = arr[i].date;
         const groupId = arr[i].groupId.toString();
@@ -120,6 +125,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // authroization 체크, True일 때 진행
     // 샘플 데이터 생성
     realm.write(() => {
       const group1 = realm.create(
@@ -160,21 +166,11 @@ export default function Home() {
       );
     });
 
-    // belongTo 와 follow 서버와 동기화 추가하기
     async function getDataFromServer(
       accessToken: string,
       latestUpdatedDate: string | null,
       renewUpdatedDate: string
     ) {
-      // const GroupId = 1;
-      // axios.post(
-      //   "/api/follows/",
-      //   {
-      //     GroupId,
-      //   },
-      //   { headers: { Authorization: `Bearer ${accessToken}` } }
-      // );
-
       // belongTo 서버 동기화
       const belongToGroups = await axios.get("/api/belong-tos/", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -298,15 +294,14 @@ export default function Home() {
       <View style={[styles.calendarViewContainer]}>
         <CalendarView onDayPress={onDayPress} markedDates={markedDates} />
       </View>
-      <View style={{ flex: 1, paddingHorizontal: 26 }}>
+      <View style={[styles.agendaContainer]}>
         <View
           style={{
             marginBottom: 10,
-            alignItems: "flex-start",
             flexDirection: "row",
           }}
         >
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>일정</Text>
+          <Text style={[styles.agendaText]}>일정</Text>
         </View>
         <SectionList
           stickySectionHeadersEnabled={false}
@@ -327,5 +322,13 @@ const styles = StyleSheet.create({
   },
   calendarViewContainer: {
     flex: 1,
+  },
+  agendaContainer: {
+    flex: 1,
+    paddingHorizontal: "5%",
+  },
+  agendaText: {
+    fontFamily: S.fontBold,
+    fontSize: 20,
   },
 });

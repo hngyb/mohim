@@ -58,6 +58,9 @@ export default function SetGroup() {
               flex: 1,
               justifyContent: "center",
             }}
+            itemStyle={{
+              fontFamily: S.fontMedium,
+            }}
             selectedValue={selectedGroup}
             onValueChange={(itemValue, itemIndex) => {
               setSelectedGroup(itemValue);
@@ -96,8 +99,8 @@ export default function SetGroup() {
               S.buttonStyles.longButton,
               {
                 backgroundColor: buttonDisabled
-                  ? Color(Colors.grey300).alpha(0.5).string()
-                  : "lightgrey",
+                  ? Color(S.secondayColor).alpha(0.5).string()
+                  : S.secondayColor,
               },
             ]}
             disabled={buttonDisabled}
@@ -132,21 +135,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontSize: 35,
-    fontWeight: "bold",
+    fontFamily: S.fontBold,
+    fontSize: 30,
   },
   text: {
+    fontFamily: S.fontMedium,
     textAlign: "center",
-    backgroundColor: "lightgrey",
-    fontWeight: "bold",
+    backgroundColor: S.secondayColor,
     color: "black",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
+    fontFamily: S.fontBold,
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
   },
 });

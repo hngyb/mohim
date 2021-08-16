@@ -22,28 +22,12 @@ export default function SetService() {
     useState<Array<any>>(services);
   const [items, setItems] = useState([
     {
-      label: "전도인",
-      value: "전도인",
+      label: "찬양대",
+      value: "찬양대",
     },
     {
-      label: "교구임원",
-      value: "교구임원",
-    },
-    {
-      label: "은빛장년회 임원",
-      value: "은빛장년회 임원",
-    },
-    {
-      label: "봉사회 임원",
-      value: "봉사회 임원",
-    },
-    {
-      label: "어머니회 임원",
-      value: "어머니회 임원",
-    },
-    {
-      label: "청년회 임원",
-      value: "청년회 임원",
+      label: "미디어선교부",
+      value: "미디어선교부",
     },
     {
       label: "교회학교 교사(유)",
@@ -61,10 +45,7 @@ export default function SetService() {
       label: "교회학교 교사(고)",
       value: "교회학교 교사(고)",
     },
-    {
-      label: "미디어선교부",
-      value: "미디어선교부",
-    },
+    { label: "청년회 총무팀", value: "청년회 총무팀" },
     {
       label: "방송부",
       value: "방송부",
@@ -94,10 +75,6 @@ export default function SetService() {
       value: "주차수송부",
     },
     {
-      label: "찬양대",
-      value: "찬양대",
-    },
-    {
       label: "해외선교부",
       value: "해외선교부",
     },
@@ -110,7 +87,7 @@ export default function SetService() {
       value: "환경꾸밈부",
     },
   ]);
-  const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
+  const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
   const navigation = useNavigation();
   const goBack = useCallback(
     () => navigation.canGoBack() && navigation.goBack(),
@@ -124,9 +101,9 @@ export default function SetService() {
     dispatch(
       O.setProfile(church, sex, district, group, selectedServices, inviteCode)
     );
-    isEmpty(selectedServices)
-      ? setButtonDisabled(true)
-      : setButtonDisabled(false);
+    // isEmpty(selectedServices)
+    //   ? setButtonDisabled(true)
+    //   : setButtonDisabled(false);
   }, [selectedServices]);
 
   return (
@@ -151,13 +128,21 @@ export default function SetService() {
         </View>
         <View style={{ flex: 2 }}>
           <DropDownPicker
+            textStyle={{ fontFamily: S.fontMedium }}
+            labelStyle={{
+              fontFamily: S.fontMedium,
+            }}
+            badgeTextStyle={{
+              fontFamily: S.fontMedium,
+            }}
+            badgeColors={S.primaryColor}
             maxHeight={140}
             listMode="FLATLIST"
             mode="BADGE"
-            showBadgeDot={true}
+            showBadgeDot={false}
             multiple={true}
             min={0}
-            max={10}
+            max={5}
             open={open}
             value={selectedServices}
             items={items}
@@ -216,21 +201,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontSize: 35,
-    fontWeight: "bold",
+    fontFamily: S.fontBold,
+    fontSize: 30,
   },
   text: {
+    fontFamily: S.fontMedium,
     textAlign: "center",
-    backgroundColor: "lightgrey",
-    fontWeight: "bold",
+    backgroundColor: S.secondayColor,
     color: "black",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
+    fontFamily: S.fontBold,
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
   },
 });
