@@ -128,14 +128,15 @@ export default function SetService() {
         </View>
         <View style={{ flex: 2 }}>
           <DropDownPicker
-            textStyle={{ fontFamily: S.fontMedium }}
+            textStyle={{ fontFamily: S.fonts.medium }}
             labelStyle={{
-              fontFamily: S.fontMedium,
+              fontFamily: S.fonts.medium,
             }}
             badgeTextStyle={{
-              fontFamily: S.fontMedium,
+              fontFamily: S.fonts.medium,
+              color: "white",
             }}
-            badgeColors={S.primaryColor}
+            badgeColors={S.colors.primary}
             maxHeight={140}
             listMode="FLATLIST"
             mode="BADGE"
@@ -165,21 +166,14 @@ export default function SetService() {
               S.buttonStyles.longButton,
               {
                 backgroundColor: buttonDisabled
-                  ? Color(S.secondayColor).alpha(0.5).string()
-                  : S.secondayColor,
+                  ? S.colors.secondary
+                  : S.colors.primary,
               },
             ]}
             disabled={buttonDisabled}
             onPress={goNext}
           >
-            <Text
-              style={[
-                styles.nextText,
-                { color: buttonDisabled ? Colors.grey400 : "black" },
-              ]}
-            >
-              다음 →
-            </Text>
+            <Text style={[styles.nextText]}>다음 →</Text>
           </TouchableView>
           <View style={{ flex: 2 }}></View>
         </View>
@@ -201,21 +195,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     fontSize: 30,
   },
   text: {
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.medium,
     textAlign: "center",
-    backgroundColor: S.secondayColor,
+    backgroundColor: S.colors.secondary,
     color: "black",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
+    color: "white",
   },
 });

@@ -1,5 +1,5 @@
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { Provider as ReduxProvider } from "react-redux";
 import { makeStore } from "./src/store";
 import MainNavigator from "./src/screens/MainNavigator";
@@ -9,10 +9,18 @@ const store = makeStore();
 axios.defaults.baseURL = "http://localhost:9179";
 axios.defaults.withCredentials = true;
 
+const MyTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: "white",
+  },
+};
+
 export default function App() {
   return (
     <ReduxProvider store={store}>
-      <NavigationContainer>
+      <NavigationContainer theme={MyTheme}>
         <MainNavigator />
       </NavigationContainer>
     </ReduxProvider>

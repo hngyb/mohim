@@ -6,6 +6,7 @@ import {
   SectionList,
   Text,
   TextInput,
+  LogBox,
 } from "react-native";
 import SplashScreen from "react-native-splash-screen";
 import {
@@ -18,20 +19,23 @@ import {
 import * as U from "../utils";
 import * as L from "../store/latestUpdate";
 import * as S from "./Styles";
-import Icon from "react-native-vector-icons/Ionicons";
 import moment from "moment";
 import realm from "../models";
 import Realm from "realm";
 import axios from "axios";
 import { useDispatch } from "react-redux";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 
 /*
 Todo
-2. 성도 인증할 때 사용자가 그룹 색깔도 함께 설정
 3. 로컬 디비에서 deleted 데이터 삭제 로직 추가
  */
 
 export default function Home() {
+  LogBox.ignoreLogs([
+    "Warning: Encountered two children with the same key, `1`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.",
+  ]); // toSetMarkedDatesObjects 함수에서 objectKey 중복에 대한 경고 무시하기
+  const [refresh, setRefresh] = useState<boolean>(true);
   const [today, setToday] = useState<string>(moment().format("YYYY-MM-DD"));
   const [markedDates, setMarkedDates] = useState({});
   const [pastSelectedDate, setPastSelectedDate] = useState<string>();
@@ -71,7 +75,7 @@ export default function Home() {
       const objects: any = {};
       objects[today] = {
         selected: true,
-        selectedColor: S.primaryColor,
+        selectedColor: S.colors.primary,
         dots: [],
       };
       for (let i = 0; i < arr.length; ++i) {
@@ -112,8 +116,8 @@ export default function Home() {
         {
           group: groupName,
           location: arr[i].location,
-          start: arr[i].startTime.slice(0, 5),
-          end: arr[i].endTime.slice(0, 5),
+          start: arr[i].startTime?.slice(0, 5),
+          end: arr[i].endTime?.slice(0, 5),
           notice: arr[i].notice,
           memo: arr[i].memo,
           color: arr[i].color,
@@ -125,164 +129,143 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // authroization 체크, True일 때 진행
-    // 샘플 데이터 생성
-    realm.write(() => {
-      const group1 = realm.create(
-        "Groups",
-        {
-          id: 1,
-          name: "일산교회",
-          church: "일산교회",
-          isPublic: true,
-          color: "red",
-        },
-        Realm.UpdateMode.Modified
-      );
-      const group2 = realm.create(
-        "Groups",
-        {
-          id: 2,
-          name: "청년회",
-          church: "일산교회",
-          isPublic: true,
-          color: "blue",
-        },
-        Realm.UpdateMode.Modified
-      );
-      const follow1 = realm.create(
-        "Follows",
-        {
-          groupId: 1,
-        },
-        Realm.UpdateMode.Modified
-      );
-      const follow2 = realm.create(
-        "Follows",
-        {
-          groupId: 2,
-        },
-        Realm.UpdateMode.Modified
-      );
-    });
-
-    async function getDataFromServer(
-      accessToken: string,
-      latestUpdatedDate: string | null,
-      renewUpdatedDate: string
-    ) {
-      // belongTo 서버 동기화
-      const belongToGroups = await axios.get("/api/belong-tos/", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const belongToGroupsArray = belongToGroups.data;
-      belongToGroupsArray.forEach((data: any) => {
-        realm.write(() => {
-          const belongToGroup = realm.create(
-            "BelongTos",
-            {
-              groupId: data.GroupId,
-              createdAt: data.createdAt,
-              updatedAt: data.updatedAt,
-              deletedAt: data.deletedAt,
-            },
-            Realm.UpdateMode.Modified
-          );
-        });
-      });
-
-      // follow 서버 동기화
-      const followGroups = await axios.get("/api/follows/", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const followGroupsArray = followGroups.data;
-      followGroupsArray.forEach((data: any) => {
-        realm.write(() => {
-          const followGroup = realm.create(
-            "Follows",
-            {
-              groupId: data.GroupId,
-              createdAt: data.createdAt,
-              updatedAt: data.updatedAt,
-              deletedAt: data.deletedAt,
-            },
-            Realm.UpdateMode.Modified
-          );
-        });
-      });
-
-      // follow 그룹에 속한 이벤트 동기화
-      const followGroupIds = await realm
-        .objects("Follows")
-        .filtered("deletedAt == null");
-      await followGroupIds.forEach(async (groupId: any) => {
-        const response = await axios.get("/api/events/", {
-          params: {
-            groupId: groupId.groupId,
-            date: latestUpdatedDate,
-          },
+    if (refresh === true) {
+      async function getDataFromServer(
+        accessToken: string,
+        latestUpdatedDate: string | null,
+        renewUpdatedDate: string
+      ) {
+        // authroization 체크, True일 때 진행
+        const isAuthorized = await axios.get("/api/users/is-authorized", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        const toBeUpdatedData = response.data;
-        toBeUpdatedData.forEach((data: any) => {
-          const groupInfo: any = realm.objectForPrimaryKey(
-            "Groups",
-            data.GroupId
-          );
-          const groupColor = groupInfo.color;
-          realm.write(() => {
-            const event = realm.create(
-              "Events",
-              {
-                id: data.id,
-                groupId: data.GroupId,
-                title: data.title,
-                date: data.date.split("T")[0],
-                startTime: data.startTime,
-                endTime: data.endTime,
-                location: data.location,
-                notice: data.notice,
-                color: groupColor,
-                createdAt: data.createdAt,
-                updatedAt: data.updatedAt,
-                deletedAt: data.deletedAt,
-              },
-              Realm.UpdateMode.Modified
-            );
+        if (isAuthorized.data.isAuthorized === true) {
+          // belongTo 서버 동기화
+          const belongToGroups = await axios.get("/api/belong-tos/", {
+            headers: { Authorization: `Bearer ${accessToken}` },
           });
-        });
+          const belongToGroupsArray = belongToGroups.data;
+          belongToGroupsArray.forEach((data: any) => {
+            realm.write(() => {
+              const belongToGroup = realm.create(
+                "BelongTos",
+                {
+                  groupId: data.GroupId,
+                  createdAt: data.createdAt,
+                  updatedAt: data.updatedAt,
+                  deletedAt: data.deletedAt,
+                },
+                Realm.UpdateMode.Modified
+              );
+            });
+          });
+
+          // follow 서버 동기화
+          const followGroups = await axios.get("/api/follows/", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const followGroupsArray = followGroups.data;
+          followGroupsArray.forEach((data: any) => {
+            realm.write(() => {
+              const followGroup = realm.create(
+                "Follows",
+                {
+                  groupId: data.GroupId,
+                  createdAt: data.createdAt,
+                  updatedAt: data.updatedAt,
+                  deletedAt: data.deletedAt,
+                },
+                Realm.UpdateMode.Modified
+              );
+            });
+          });
+
+          // follow 그룹에 속한 이벤트 동기화
+          const followGroupIds = await realm
+            .objects("Follows")
+            .filtered("deletedAt == null");
+          await followGroupIds.forEach(async (groupId: any) => {
+            const response = await axios.get("/api/events/", {
+              params: {
+                groupId: groupId.groupId,
+                date: latestUpdatedDate,
+              },
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const toBeUpdatedData = response.data;
+            toBeUpdatedData.forEach((data: any) => {
+              const groupInfo: any = realm.objectForPrimaryKey(
+                "Groups",
+                data.GroupId
+              );
+              const groupColor = groupInfo.color;
+              realm.write(() => {
+                const event = realm.create(
+                  "Events",
+                  {
+                    id: data.id,
+                    groupId: data.GroupId,
+                    title: data.title,
+                    date: data.date.split("T")[0],
+                    startTime: data.startTime,
+                    endTime: data.endTime,
+                    location: data.location,
+                    notice: data.notice,
+                    color: groupColor,
+                    createdAt: data.createdAt,
+                    updatedAt: data.updatedAt,
+                    deletedAt: data.deletedAt,
+                  },
+                  Realm.UpdateMode.Modified
+                );
+              });
+            });
+          });
+          await U.writeToStorage("latestUpdatedDate", renewUpdatedDate);
+          dispatch(L.setUpdatedDate(renewUpdatedDate));
+        }
+      }
+      // 로컬 DB 와 서버 DB 동기화
+      U.readFromStorage("accessJWT").then((accessToken) => {
+        U.readFromStorage("latestUpdatedDate")
+          .then((value) => {
+            const latestUpdatedDate = value.length === 0 ? null : value;
+            const renewUpdatedDate = moment().format("YYYY-MM-DD");
+            getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate);
+          })
+          .catch((e) => console.log(e));
       });
-      await U.writeToStorage("latestUpdatedDate", renewUpdatedDate);
-      dispatch(L.setUpdatedDate(renewUpdatedDate));
+
+      // 캘린더 마킹
+      const toBeMarkedDates = realm
+        .objects("Events")
+        .filtered("deletedAt == null");
+      const toBeMarkedDatesObjects = toSetMarkedDatesObjects(toBeMarkedDates);
+      setMarkedDates(toBeMarkedDatesObjects);
+
+      // 오늘의 아젠다 불러오기
+      const todayAgenda = realm
+        .objects("Events")
+        .filtered(`date == "${today}" and deletedAt == null`)
+        .sorted("startTime");
+      setAgendaData(toAgendaType(todayAgenda));
+
+      // 서버에서 삭제된 이벤트 지우기
+      realm.write(() => {
+        const deletedEvents = realm
+          .objects("Events")
+          .filtered("deletedAt != null");
+        realm.delete(deletedEvents);
+      });
+      setRefresh(false);
     }
-    // 로컬 DB 와 서버 DB 동기화
-    U.readFromStorage("accessJWT").then((accessToken) => {
-      U.readFromStorage("latestUpdatedDate")
-        .then((value) => {
-          const latestUpdatedDate = value.length === 0 ? null : value;
-          const renewUpdatedDate = moment().format("YYYY-MM-DD");
-          getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate);
-        })
-        .catch((e) => console.log(e));
-    });
+  }, [refresh]); // 새로고침 dependancy로 넣기 (추가)
 
-    // 캘린더 마킹
-    const toBeMarkedDates = realm
-      .objects("Events")
-      .filtered("deletedAt == null");
-    const toBeMarkedDatesObjects = toSetMarkedDatesObjects(toBeMarkedDates);
-    setMarkedDates(toBeMarkedDatesObjects);
-
-    // 오늘의 아젠다 불러오기
-    const todayAgenda = realm
-      .objects("Events")
-      .filtered(`date == "${today}" and deletedAt == null`)
-      .sorted("startTime");
-    setAgendaData(toAgendaType(todayAgenda));
-
-    // deleted data 지우기
-
-    SplashScreen.hide();
+  useEffect(() => {
+    setTimeout(() => {
+      setRefresh(true);
+      SplashScreen.hide();
+    }, 1500);
   }, []);
 
   return (
@@ -328,7 +311,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   agendaText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     fontSize: 20,
   },
 });

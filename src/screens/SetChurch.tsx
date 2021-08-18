@@ -10,6 +10,7 @@ import { Colors } from "react-native-paper";
 import Color from "color";
 import { useDispatch, useStore } from "react-redux";
 import * as O from "../store/onBoarding";
+import { Picker } from "@react-native-picker/picker";
 
 export default function SetChurch() {
   const store = useStore();
@@ -43,16 +44,33 @@ export default function SetChurch() {
         >
           <Text style={[styles.questionText]}>소속 교회를 선택해주세요</Text>
         </View>
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Text style={[styles.text]}>일산교회</Text>
+        <View style={{ flex: 2 }}>
+          <Picker
+            style={{
+              flex: 1,
+              justifyContent: "center",
+            }}
+            itemStyle={{
+              fontFamily: S.fonts.medium,
+            }}
+            selectedValue={selectedChurch}
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedChurch(itemValue);
+              dispatch(
+                O.setProfile(
+                  itemValue,
+                  sex,
+                  district,
+                  group,
+                  services,
+                  inviteCode
+                )
+              );
+            }}
+          >
+            <Picker.Item label="일산교회" value="일산교회" />
+          </Picker>
         </View>
-        <View style={{ flex: 1 }}></View>
       </View>
       <View style={[styles.nextContainer]}>
         <View style={{ flex: 1 }}>
@@ -66,21 +84,14 @@ export default function SetChurch() {
               S.buttonStyles.longButton,
               {
                 backgroundColor: buttonDisabled
-                  ? Color(S.secondayColor).alpha(0.5).string()
-                  : S.secondayColor,
+                  ? S.colors.secondary
+                  : S.colors.primary,
               },
             ]}
             disabled={buttonDisabled}
             onPress={goNext}
           >
-            <Text
-              style={[
-                styles.nextText,
-                { color: buttonDisabled ? Colors.grey400 : "black" },
-              ]}
-            >
-              다음 →
-            </Text>
+            <Text style={[styles.nextText]}>다음 →</Text>
           </TouchableView>
           <View style={{ flex: 2 }}></View>
         </View>
@@ -102,22 +113,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     fontSize: 30,
   },
   text: {
     flex: 1,
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.medium,
     textAlign: "center",
-    backgroundColor: S.secondayColor,
+    backgroundColor: S.colors.secondary,
     color: "grey",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
+    color: "white",
   },
 });

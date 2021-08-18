@@ -64,7 +64,9 @@ export default function SetSex() {
               flex: 1,
               marginRight: 10,
               borderColor:
-                selectedSex === "brother" ? S.primaryColor : S.secondayColor,
+                selectedSex === "brother"
+                  ? S.colors.primary
+                  : S.colors.secondary,
               borderWidth: 3,
             }}
             onPress={() => {
@@ -81,14 +83,28 @@ export default function SetSex() {
               );
             }}
           >
-            <Text style={[styles.text]}>형제</Text>
+            <Text
+              style={[
+                styles.text,
+                {
+                  color:
+                    selectedSex === "brother"
+                      ? S.colors.primary
+                      : S.colors.secondary,
+                },
+              ]}
+            >
+              형제
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={{
               flex: 1,
               marginLeft: 10,
               borderColor:
-                selectedSex === "sister" ? S.primaryColor : S.secondayColor,
+                selectedSex === "sister"
+                  ? S.colors.primary
+                  : S.colors.secondary,
               borderWidth: 3,
             }}
             onPress={() => {
@@ -105,7 +121,19 @@ export default function SetSex() {
               );
             }}
           >
-            <Text style={[styles.text]}>자매</Text>
+            <Text
+              style={[
+                styles.text,
+                {
+                  color:
+                    selectedSex === "sister"
+                      ? S.colors.primary
+                      : S.colors.secondary,
+                },
+              ]}
+            >
+              자매
+            </Text>
           </TouchableOpacity>
         </View>
         <View style={{ flex: 1 }}></View>
@@ -122,21 +150,14 @@ export default function SetSex() {
               S.buttonStyles.longButton,
               {
                 backgroundColor: buttonDisabled
-                  ? Color(S.secondayColor).alpha(0.5).string()
-                  : S.secondayColor,
+                  ? S.colors.secondary
+                  : S.colors.primary,
               },
             ]}
             disabled={buttonDisabled}
             onPress={goNext}
           >
-            <Text
-              style={[
-                styles.nextText,
-                { color: buttonDisabled ? Colors.grey400 : "black" },
-              ]}
-            >
-              다음 →
-            </Text>
+            <Text style={[styles.nextText]}>다음 →</Text>
           </TouchableView>
           <View style={{ flex: 2 }}></View>
         </View>
@@ -158,21 +179,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     fontSize: 30,
   },
   text: {
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
-    backgroundColor: S.secondayColor,
-    color: "black",
+    backgroundColor: "white",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
+    color: "white",
   },
 });

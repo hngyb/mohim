@@ -1,6 +1,7 @@
 import React, { FC } from "react";
 import { Text, View } from "react-native";
-import { Avatar, Card, Paragraph, Title } from "react-native-paper";
+import { Avatar, Card } from "react-native-paper";
+import * as S from "../screens/Styles";
 
 import { TouchableView } from "./TouchableView";
 
@@ -18,7 +19,6 @@ type AgendaProps = {
 };
 
 export const Agenda: FC<AgendaProps> = ({ title, data }) => {
-  console.log(data);
   return (
     <TouchableView>
       <Card>
@@ -33,6 +33,8 @@ export const Agenda: FC<AgendaProps> = ({ title, data }) => {
               label={data.group[0]}
               size={50}
               style={{ backgroundColor: data.color }}
+              color="white"
+              labelStyle={{ fontFamily: S.fonts.bold, fontSize: 25 }}
             />
             <View
               style={{
@@ -42,8 +44,8 @@ export const Agenda: FC<AgendaProps> = ({ title, data }) => {
             >
               <Text
                 style={{
-                  fontSize: 15,
-                  fontWeight: "700",
+                  fontFamily: S.fonts.medium,
+                  fontSize: 18,
                   marginBottom: 1,
                 }}
               >
@@ -51,8 +53,8 @@ export const Agenda: FC<AgendaProps> = ({ title, data }) => {
               </Text>
               <Text
                 style={{
-                  fontSize: 13,
-                  fontWeight: "500",
+                  fontFamily: S.fonts.medium,
+                  fontSize: 12,
                   color: "grey",
                   marginBottom: 1,
                 }}
@@ -62,8 +64,8 @@ export const Agenda: FC<AgendaProps> = ({ title, data }) => {
               <Text
                 style={{
                   flex: 1,
-                  fontSize: 13,
-                  fontWeight: "500",
+                  fontFamily: S.fonts.medium,
+                  fontSize: 12,
                   color: "grey",
                 }}
               >

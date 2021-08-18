@@ -89,20 +89,20 @@ export const CalendarView: FC<CalendarViewProps> = ({
           },
           monthText: {
             textAlign: "center",
-            fontFamily: S.fontBold,
+            fontFamily: S.fonts.bold,
             fontSize: 20,
             flex: 1,
           },
         },
-        textSectionTitleColor: S.secondayColor,
-        textDayFontFamily: S.fontMedium,
+        textSectionTitleColor: S.colors.secondary,
+        textDayFontFamily: S.fonts.medium,
         textDayFontWeight: "500",
         textDayHeaderFontSize: 12,
         // dates
         textDayFontSize: 14,
-        textDayHeaderFontFamily: S.fontBold,
-        textDisabledColor: S.secondayColor,
-        selectedDayBackgroundColor: S.secondayColor,
+        textDayHeaderFontFamily: S.fonts.bold,
+        textDisabledColor: S.colors.secondary,
+        selectedDayBackgroundColor: S.colors.secondary,
         selectedDayTextColor: "#ffffff",
       }}
     />

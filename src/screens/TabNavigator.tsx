@@ -39,10 +39,10 @@ export default function TabNavigator() {
   return (
     <Tab.Navigator
       tabBarOptions={{
-        style: { backgroundColor: S.secondayColor },
+        style: { backgroundColor: S.colors.secondary },
         activeTintColor: Colors.black,
         labelStyle: {
-          fontFamily: S.fontMedium,
+          fontFamily: S.fonts.medium,
         },
       }}
       screenOptions={screenOptions}

@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback } from "react";
-import { Image, StyleSheet, View, SafeAreaView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as U from "../utils";
 import * as L from "../store/login";
@@ -20,7 +19,7 @@ export default function () {
       if (value.length > 0) {
         U.readFromStorage("refreshJWT").then((refreshToken) => {
           axios
-            .get("/api/users/refresh", {
+            .get("/api/users/refresh-all", {
               headers: { Authorization: `Bearer ${refreshToken}` },
             })
             .then((response) => {

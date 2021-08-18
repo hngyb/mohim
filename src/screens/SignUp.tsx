@@ -19,6 +19,7 @@ import * as S from "./Styles";
 import { NavigationHeader, TouchableView } from "../components";
 import { Colors } from "react-native-paper";
 import Color from "color";
+import SplashScreen from "react-native-splash-screen";
 
 /*
 Todo
@@ -64,15 +65,15 @@ export default function SignUp() {
               navigation.navigate("OnBoarding");
             })
             .catch((e) => {
-              Alert.alert("비정상적인 접근입니다.");
+              Alert.alert("비정상적인 접근입니다");
             });
         })
         .catch((e) => {
           if (e.response.status === 409) {
-            Alert.alert("이미 존재하는 계정입니다.");
+            Alert.alert("이미 존재하는 계정입니다");
           }
         });
-    } else Alert.alert("모든 정보를 입력해주세요.");
+    } else Alert.alert("모든 정보를 입력해주세요");
   }, [name, email, password]);
   const goLogin = useCallback(() => {
     setTimeout(() => {
@@ -210,8 +211,8 @@ export default function SignUp() {
                 S.buttonStyles.longButton,
                 {
                   backgroundColor: buttonDisabled
-                    ? Color(S.secondayColor).alpha(0.5).string()
-                    : S.secondayColor,
+                    ? S.colors.secondary
+                    : S.colors.primary,
                 },
               ]}
               onPress={goOnboarding}
@@ -220,7 +221,9 @@ export default function SignUp() {
               <Text
                 style={[
                   styles.bigText,
-                  { color: buttonDisabled ? Colors.grey400 : "black" },
+                  {
+                    color: "white",
+                  },
                 ]}
               >
                 시작하기
@@ -233,8 +236,20 @@ export default function SignUp() {
           <View style={{ flex: 1, justifyContent: "flex-end" }}>
             <Text style={[styles.mediumText]}>이미 계정을 갖고 계신가요?</Text>
           </View>
-          <TouchableView style={[S.buttonStyles.longButton]} onPress={goLogin}>
-            <Text style={[styles.bigText]}>로그인하기</Text>
+          <TouchableView
+            style={[
+              S.buttonStyles.longButton,
+              {
+                backgroundColor: "white",
+                borderWidth: 2,
+                borderColor: S.colors.primary,
+              },
+            ]}
+            onPress={goLogin}
+          >
+            <Text style={[styles.bigText, { color: S.colors.primary }]}>
+              로그인하기
+            </Text>
           </TouchableView>
           <View style={{ flex: 2 }}></View>
         </View>
@@ -252,22 +267,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   startText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     fontSize: 35,
   },
   textInput: {
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.medium,
     flex: 1,
-    backgroundColor: S.secondayColor,
+    backgroundColor: S.colors.secondary,
     borderRadius: 5,
     paddingHorizontal: 10,
     margin: 5,
     fontSize: 18,
   },
   passwordInput: {
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.medium,
     flex: 1,
-    backgroundColor: S.secondayColor,
+    backgroundColor: S.colors.secondary,
     borderRadius: 5,
     borderTopRightRadius: 0,
     borderBottomRightRadius: 0,
@@ -279,7 +294,7 @@ const styles = StyleSheet.create({
   showPasswordIcon: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor: S.secondayColor,
+    backgroundColor: S.colors.secondary,
     borderRadius: 5,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
@@ -292,18 +307,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   bigText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
   },
   mediumText: {
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.medium,
     textAlign: "center",
     fontSize: 15,
     paddingBottom: 10,
   },
   validText: {
-    fontFamily: S.fontLight,
+    fontFamily: S.fonts.light,
     fontWeight: "600",
     marginHorizontal: 10,
   },

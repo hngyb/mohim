@@ -3,12 +3,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
 import { Picker } from "@react-native-picker/picker";
 import * as S from "./Styles";
-import { Colors } from "react-native-paper";
-import Color from "color";
 import { useDispatch, useStore } from "react-redux";
 import * as O from "../store/onBoarding";
 
@@ -61,7 +58,7 @@ export default function SetDistrict() {
               justifyContent: "center",
             }}
             itemStyle={{
-              fontFamily: S.fontMedium,
+              fontFamily: S.fonts.medium,
             }}
             selectedValue={selectedDistrict}
             onValueChange={(itemValue, itemIndex) => {
@@ -78,24 +75,24 @@ export default function SetDistrict() {
               );
             }}
           >
-            <Picker.Item label="11구역" value="11" />
-            <Picker.Item label="12구역" value="12" />
-            <Picker.Item label="13구역" value="13" />
-            <Picker.Item label="21구역" value="21" />
-            <Picker.Item label="22구역" value="22" />
-            <Picker.Item label="23구역" value="23" />
-            <Picker.Item label="31구역" value="31" />
-            <Picker.Item label="32구역" value="32" />
-            <Picker.Item label="33구역" value="33" />
-            <Picker.Item label="41구역" value="41" />
-            <Picker.Item label="42구역" value="42" />
-            <Picker.Item label="43구역" value="43" />
-            <Picker.Item label="51구역" value="51" />
-            <Picker.Item label="52구역" value="52" />
-            <Picker.Item label="53구역" value="53" />
-            <Picker.Item label="61구역" value="61" />
-            <Picker.Item label="62구역" value="62" />
-            <Picker.Item label="63구역" value="63" />
+            <Picker.Item label="11구역" value="11구역" />
+            <Picker.Item label="12구역" value="12구역" />
+            <Picker.Item label="13구역" value="13구역" />
+            <Picker.Item label="21구역" value="21구역" />
+            <Picker.Item label="22구역" value="22구역" />
+            <Picker.Item label="23구역" value="23구역" />
+            <Picker.Item label="31구역" value="31구역" />
+            <Picker.Item label="32구역" value="32구역" />
+            <Picker.Item label="33구역" value="33구역" />
+            <Picker.Item label="41구역" value="41구역" />
+            <Picker.Item label="42구역" value="42구역" />
+            <Picker.Item label="43구역" value="43구역" />
+            <Picker.Item label="51구역" value="51구역" />
+            <Picker.Item label="52구역" value="52구역" />
+            <Picker.Item label="53구역" value="53구역" />
+            <Picker.Item label="61구역" value="61구역" />
+            <Picker.Item label="62구역" value="62구역" />
+            <Picker.Item label="63구역" value="63구역" />
           </Picker>
         </View>
       </View>
@@ -111,21 +108,14 @@ export default function SetDistrict() {
               S.buttonStyles.longButton,
               {
                 backgroundColor: buttonDisabled
-                  ? Color(S.secondayColor).alpha(0.5).string()
-                  : S.secondayColor,
+                  ? S.colors.secondary
+                  : S.colors.primary,
               },
             ]}
             disabled={buttonDisabled}
             onPress={goNext}
           >
-            <Text
-              style={[
-                styles.nextText,
-                { color: buttonDisabled ? Colors.grey400 : "black" },
-              ]}
-            >
-              다음 →
-            </Text>
+            <Text style={[styles.nextText]}>다음 →</Text>
           </TouchableView>
           <View style={{ flex: 2 }}></View>
         </View>
@@ -147,21 +137,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     fontSize: 30,
   },
   text: {
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.medium,
     textAlign: "center",
-    backgroundColor: S.secondayColor,
+    backgroundColor: S.colors.secondary,
     color: "black",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
+    color: "white",
   },
 });

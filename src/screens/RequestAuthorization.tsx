@@ -1,16 +1,14 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
-import { Colors } from "react-native-paper";
-import Color from "color";
 import { useDispatch, useStore } from "react-redux";
 import * as O from "../store/onBoarding";
 import * as U from "../utils";
+import * as A from "../store/asyncStorage";
 import realm from "../models";
 import Realm from "realm";
 import axios from "axios";
@@ -29,6 +27,10 @@ export default function RequestAuthorization() {
     () => navigation.canGoBack() && navigation.goBack(),
     []
   );
+  const randomColor = useCallback((palettes: Array<any>) => {
+    return palettes[Math.floor(Math.random() * palettes.length)];
+  }, []);
+
   const requestAuthorization = useCallback(() => {
     // inviteCode 유효성 검사
     U.readFromStorage("accessJWT").then((accessToken) => {
@@ -40,17 +42,202 @@ export default function RequestAuthorization() {
           },
           { headers: { Authorization: `Bearer ${accessToken}` } }
         )
-        .then((response) => {
+        .then(async (response) => {
           if (response.data.id === inviteCode) {
-            console.log("authorized");
-            // realm 저장하고 서버에 post (authorization = True)
-            navigation.navigate("TabNavigator");
+            const churchGroupId = await axios.get("/api/groups/", {
+              params: {
+                name: church,
+                church: church,
+              },
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const districtGroupId = await axios.get("/api/groups/", {
+              params: {
+                name: district,
+                church: church,
+              },
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const groupGroupId = await axios.get("/api/groups/", {
+              params: {
+                name: group,
+                church: church,
+              },
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            const serviceGroups = await Promise.all(
+              services.map(async (service: string) => {
+                const serviceGroup = await axios.get("/api/groups/", {
+                  params: {
+                    name: service,
+                    church: church,
+                  },
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                });
+                return serviceGroup.data;
+              })
+            );
+            const ids = {
+              churchGroupId: churchGroupId,
+              districtGroupId: districtGroupId,
+              groupGroupId: groupGroupId,
+              serviceGroups: serviceGroups,
+            };
+            return ids;
           }
         })
+        .then((ids: any) => {
+          realm.write(() => {
+            const groupChurch = realm.create(
+              "Groups",
+              {
+                id: ids.churchGroupId.data.id,
+                name: church,
+                church: church,
+                isPublic: true,
+                color: randomColor(S.colorPalettes),
+              },
+              Realm.UpdateMode.Modified
+            );
+            const followChurch = realm.create(
+              "Follows",
+              {
+                groupId: ids.churchGroupId.data.id,
+              },
+              Realm.UpdateMode.Modified
+            );
+            const belongToChurch = realm.create(
+              "BelongTos",
+              {
+                groupId: ids.churchGroupId.data.id,
+              },
+              Realm.UpdateMode.Modified
+            );
+            const groupDistrict = realm.create(
+              "Groups",
+              {
+                id: ids.districtGroupId.data.id,
+                name: district,
+                church: church,
+                isPublic: true,
+                color: randomColor(S.colorPalettes),
+              },
+              Realm.UpdateMode.Modified
+            );
+            const followDistrict = realm.create(
+              "Follows",
+              {
+                groupId: ids.districtGroupId.data.id,
+              },
+              Realm.UpdateMode.Modified
+            );
+            const belongToDistrict = realm.create(
+              "BelongTos",
+              {
+                groupId: ids.districtGroupId.data.id,
+              },
+              Realm.UpdateMode.Modified
+            );
+            const groupGroup = realm.create(
+              "Groups",
+              {
+                id: ids.groupGroupId.data.id,
+                name: group,
+                church: church,
+                isPublic: true,
+                color: randomColor(S.colorPalettes),
+              },
+              Realm.UpdateMode.Modified
+            );
+            const followGroup = realm.create(
+              "Follows",
+              {
+                groupId: ids.groupGroupId.data.id,
+              },
+              Realm.UpdateMode.Modified
+            );
+            const belongToGroup = realm.create(
+              "BelongTos",
+              {
+                groupId: ids.groupGroupId.data.id,
+              },
+              Realm.UpdateMode.Modified
+            );
+            ids.serviceGroups.forEach((serviceGroup: any) => {
+              realm.create(
+                "Groups",
+                {
+                  id: serviceGroup.id,
+                  name: serviceGroup.name,
+                  church: serviceGroup.church,
+                  isPublic: true,
+                  color: randomColor(S.colorPalettes),
+                },
+                Realm.UpdateMode.Modified
+              );
+              realm.create(
+                "Follows",
+                {
+                  groupId: serviceGroup.id,
+                },
+                Realm.UpdateMode.Modified
+              );
+              realm.create(
+                "BelongTos",
+                {
+                  groupId: serviceGroup.id,
+                },
+                Realm.UpdateMode.Modified
+              );
+            });
+          });
+          const serviceGroupIds = ids.serviceGroups.map(
+            (serviceGroup: any) => serviceGroup.id
+          );
+          axios
+            .post(
+              "/api/users/register",
+              {
+                church: ids.churchGroupId.data.id,
+                district: ids.districtGroupId.data.id,
+                group: ids.groupGroupId.data.id,
+                services: serviceGroupIds,
+                sex: sex,
+              },
+              { headers: { Authorization: `Bearer ${accessToken}` } }
+            )
+            .then((response) => {
+              if (response.status === 201) {
+                navigation.navigate("TabNavigator");
+              }
+            });
+        })
         .catch((e) => {
-          console.log(e); // 에러코드에 따라 accesstoken 만료랑 초대코드 잘못된 걸로 나누어서 처리
-          // error code === 401 -> refreshToken으로 accessToken 재발급후  request 재진행
-          // error code === 400 -> 잘못된 초대코드 모달창 띄우기
+          const errorStatus = e.response.status;
+          if (errorStatus === 400) {
+            // 초대코드 오류
+            Alert.alert("초대코드를 확인해주세요");
+          } else if (errorStatus === 401) {
+            // accessToken 만료
+            U.readFromStorage("refreshJWT").then((refreshToken) => {
+              // accessToken 재발급
+              axios
+                .get("/api/users/refresh-access", {
+                  headers: { Authorization: `Bearer ${refreshToken}` },
+                })
+                .then((response) => {
+                  const renewedAccessToken = response.data.accessToken;
+                  U.writeToStorage("accessJWT", renewedAccessToken);
+                  dispatch(A.setJWT(renewedAccessToken, refreshToken));
+                })
+                .then(() => {
+                  // 재요청
+                  requestAuthorization();
+                });
+            });
+          } else {
+            Alert.alert("비정상적인 접근입니다");
+          }
         });
     });
   }, [inviteCode]);
@@ -112,31 +299,33 @@ export default function RequestAuthorization() {
                 S.buttonStyles.longButton,
                 {
                   backgroundColor: buttonDisabled
-                    ? Color(S.secondayColor).alpha(0.5).string()
-                    : S.secondayColor,
+                    ? S.colors.secondary
+                    : S.colors.primary,
                 },
               ]}
               disabled={buttonDisabled}
               onPress={requestAuthorization}
             >
-              <Text
-                style={[
-                  styles.nextText,
-                  { color: buttonDisabled ? Colors.grey400 : "black" },
-                ]}
-              >
-                성도 인증하기
-              </Text>
+              <Text style={[styles.nextText]}>성도 인증하기</Text>
             </TouchableView>
           </View>
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1 }}></View>
           <TouchableView
-            style={[S.buttonStyles.longButton]}
+            style={[
+              S.buttonStyles.longButton,
+              {
+                backgroundColor: "white",
+                borderWidth: 2,
+                borderColor: S.colors.primary,
+              },
+            ]}
             onPress={doNextTime}
           >
-            <Text style={[styles.nextText]}>다음에 하기</Text>
+            <Text style={[styles.nextText, { color: S.colors.primary }]}>
+              다음에 하기
+            </Text>
           </TouchableView>
           <View style={{ flex: 2 }}></View>
         </View>
@@ -158,22 +347,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   questionText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     fontSize: 30,
   },
   text: {
     flex: 1,
     textAlign: "center",
-    backgroundColor: S.secondayColor,
-    fontFamily: S.fontMedium,
+    backgroundColor: S.colors.secondary,
+    fontFamily: S.fonts.medium,
     color: "grey",
     borderRadius: 5,
     fontSize: 18,
     padding: 15,
   },
   nextText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
+    color: "white",
   },
 });

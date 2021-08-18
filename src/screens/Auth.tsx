@@ -57,10 +57,15 @@ export default function Auth() {
           <View style={{ flex: 1 }}>
             <View style={{ flex: 1 }} />
             <TouchableView
-              style={[S.buttonStyles.longButton]}
+              style={[
+                S.buttonStyles.longButton,
+                { backgroundColor: S.colors.primary },
+              ]}
               onPress={goSignUp}
             >
-              <Text style={[styles.bigText]}>이메일로 시작하기</Text>
+              <Text style={[styles.bigText, { color: "white" }]}>
+                이메일로 시작하기
+              </Text>
             </TouchableView>
             <View style={{ flex: 2, justifyContent: "flex-end" }}>
               <Text style={[styles.mediumText]}>
@@ -71,10 +76,19 @@ export default function Auth() {
           <View style={{ flex: 1 }}>
             <View style={{ flex: 1 }}>
               <TouchableView
-                style={[S.buttonStyles.longButton]}
+                style={[
+                  S.buttonStyles.longButton,
+                  {
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    borderColor: S.colors.primary,
+                  },
+                ]}
                 onPress={goLogin}
               >
-                <Text style={[styles.bigText]}>로그인하기</Text>
+                <Text style={[styles.bigText, { color: S.colors.primary }]}>
+                  로그인하기
+                </Text>
               </TouchableView>
             </View>
             <View
@@ -141,18 +155,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   bigText: {
-    fontFamily: S.fontBold,
+    fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
   },
   mediumText: {
-    fontFamily: S.fontMedium,
+    fontFamily: S.fonts.medium,
     textAlign: "center",
     fontSize: 15,
     paddingBottom: 10,
   },
   smallText: {
-    fontFamily: S.fontLight,
+    fontFamily: S.fonts.light,
     textAlign: "center",
     fontSize: 11,
   },

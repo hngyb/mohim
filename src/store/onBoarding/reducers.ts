@@ -3,7 +3,7 @@ import * as T from "./types";
 export const initialState: T.State = {
   church: "일산교회",
   sex: "",
-  district: "11",
+  district: "11구역",
   group: "청년회",
   services: [],
   inviteCode: "",
