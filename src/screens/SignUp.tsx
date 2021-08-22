@@ -17,9 +17,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import * as S from "./Styles";
 import { NavigationHeader, TouchableView } from "../components";
-import { Colors } from "react-native-paper";
-import Color from "color";
-import SplashScreen from "react-native-splash-screen";
+import { ActivityIndicator, Colors } from "react-native-paper";
 
 /*
 Todo
@@ -35,6 +33,8 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isEmailValid, setIsEmailValid] = useState<boolean>(false);
   const [isPasswordValid, setIsPasswordValid] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+
   const focus = useAutoFocus();
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -42,6 +42,7 @@ export default function SignUp() {
   const goBack = useCallback(() => navigation.navigate("Auth"), []);
   const goOnboarding = useCallback(() => {
     if (email !== "" && name !== "" && password !== "") {
+      setLoading(true);
       axios
         .post("/api/users", {
           email,
@@ -62,18 +63,21 @@ export default function SignUp() {
             .then((tokens) => {
               dispatch(A.setJWT(tokens.accessToken, tokens.refreshToken));
               dispatch(L.loginAction({ email, name, password }));
+              setLoading(false);
               navigation.navigate("OnBoarding");
             })
             .catch((e) => {
-              Alert.alert("비정상적인 접근입니다");
+              setLoading(false);
+              Alert.alert("비정상적인 접근입니다", "", [{ text: "확인" }]);
             });
         })
         .catch((e) => {
+          setLoading(false);
           if (e.response.status === 409) {
-            Alert.alert("이미 존재하는 계정입니다");
+            Alert.alert("이미 존재하는 계정입니다", "", [{ text: "확인" }]);
           }
         });
-    } else Alert.alert("모든 정보를 입력해주세요");
+    } else Alert.alert("모든 정보를 입력해주세요", "", [{ text: "확인" }]);
   }, [name, email, password]);
   const goLogin = useCallback(() => {
     setTimeout(() => {
@@ -116,144 +120,156 @@ export default function SignUp() {
 
   return (
     <SafeAreaView style={[styles.container]}>
-      <NavigationHeader
-        Left={() => (
-          <TouchableView onPress={goBack}>
-            <Icon name="close" size={30}></Icon>
-          </TouchableView>
-        )}
-      ></NavigationHeader>
-      <View style={[styles.textInputContainer]}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-          }}
-        >
-          <Text style={[styles.startText]}>시작하기</Text>
-        </View>
-        <View style={{ flex: 1, marginBottom: 10 }}>
-          <TextInput
-            onFocus={focus}
-            style={[styles.textInput]}
-            value={name}
-            onChangeText={setName}
-            placeholder="이름"
-            placeholderTextColor="gray"
-            autoCapitalize="none"
-          />
-          <Text> </Text>
-        </View>
-        <View style={{ flex: 1, marginBottom: 10 }}>
-          <TextInput
-            onFocus={focus}
-            style={[styles.textInput]}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="이메일"
-            placeholderTextColor="gray"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <Text
-            style={[
-              styles.validText,
-              { color: isEmailValid ? Colors.green500 : Colors.red500 },
-            ]}
-          >
-            {email === ""
-              ? " "
-              : isEmailValid
-              ? "올바른 이메일 형식입니다 :)"
-              : "이메일을 확인해주세요 :("}
-          </Text>
-        </View>
-        <View style={{ flex: 1, marginBottom: 15 }}>
-          <View style={{ flex: 1, flexDirection: "row" }}>
-            <TextInput
-              // onFocus={focus}
-              style={[styles.passwordInput, { flex: 9 }]}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="비밀번호 (영문 / 숫자 조합 8자 이상)"
-              placeholderTextColor="gray"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-            />
-            <View style={[styles.showPasswordIcon]}>
-              <Icon
-                name={showPassword ? "eye" : "eye-off"}
-                size={25}
-                color="gray"
-                onPress={() => setShowPassword(!showPassword)}
-              />
-            </View>
-          </View>
-          <Text
-            style={[
-              styles.validText,
-              { color: isPasswordValid ? Colors.green500 : Colors.red500 },
-            ]}
-          >
-            {password === ""
-              ? " "
-              : isPasswordValid
-              ? "올바른 비밀번호 형식입니다 :)"
-              : "비밀번호를 확인해주세요 :("}
-          </Text>
-        </View>
-      </View>
-      <View style={[styles.buttonContainer]}>
+      {loading === true ? (
+        <ActivityIndicator
+          style={{ flex: 1 }}
+          size="large"
+          color={S.colors.primary}
+        />
+      ) : (
         <View style={{ flex: 1 }}>
-          <View style={{ flex: 1 }}>
-            <TouchableView
-              style={[
-                S.buttonStyles.longButton,
-                {
-                  backgroundColor: buttonDisabled
-                    ? S.colors.secondary
-                    : S.colors.primary,
-                },
-              ]}
-              onPress={goOnboarding}
-              disabled={buttonDisabled}
+          <NavigationHeader
+            Left={() => (
+              <TouchableView onPress={goBack}>
+                <Icon name="close" size={30}></Icon>
+              </TouchableView>
+            )}
+          ></NavigationHeader>
+          <View style={[styles.textInputContainer]}>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+              }}
             >
+              <Text style={[styles.startText]}>시작하기</Text>
+            </View>
+            <View style={{ flex: 1, marginBottom: 10 }}>
+              <TextInput
+                onFocus={focus}
+                style={[styles.textInput]}
+                value={name}
+                onChangeText={setName}
+                placeholder="이름"
+                placeholderTextColor="gray"
+                autoCapitalize="none"
+              />
+              <Text> </Text>
+            </View>
+            <View style={{ flex: 1, marginBottom: 10 }}>
+              <TextInput
+                onFocus={focus}
+                style={[styles.textInput]}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="이메일"
+                placeholderTextColor="gray"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
               <Text
                 style={[
-                  styles.bigText,
-                  {
-                    color: "white",
-                  },
+                  styles.validText,
+                  { color: isEmailValid ? Colors.green500 : Colors.red500 },
                 ]}
               >
-                시작하기
+                {email === ""
+                  ? " "
+                  : isEmailValid
+                  ? "올바른 이메일 형식입니다 :)"
+                  : "이메일을 확인해주세요 :("}
               </Text>
-            </TouchableView>
+            </View>
+            <View style={{ flex: 1, marginBottom: 15 }}>
+              <View style={{ flex: 1, flexDirection: "row" }}>
+                <TextInput
+                  // onFocus={focus}
+                  style={[styles.passwordInput, { flex: 9 }]}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="비밀번호 (영문 / 숫자 조합 8자 이상)"
+                  placeholderTextColor="gray"
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <View style={[styles.showPasswordIcon]}>
+                  <Icon
+                    name={showPassword ? "eye" : "eye-off"}
+                    size={25}
+                    color="gray"
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                </View>
+              </View>
+              <Text
+                style={[
+                  styles.validText,
+                  { color: isPasswordValid ? Colors.green500 : Colors.red500 },
+                ]}
+              >
+                {password === ""
+                  ? " "
+                  : isPasswordValid
+                  ? "올바른 비밀번호 형식입니다 :)"
+                  : "비밀번호를 확인해주세요 :("}
+              </Text>
+            </View>
           </View>
-          <View style={{ flex: 3 }}></View>
-        </View>
-        <View style={{ flex: 1 }}>
-          <View style={{ flex: 1, justifyContent: "flex-end" }}>
-            <Text style={[styles.mediumText]}>이미 계정을 갖고 계신가요?</Text>
+          <View style={[styles.buttonContainer]}>
+            <View style={{ flex: 1 }}>
+              <View style={{ flex: 1 }}>
+                <TouchableView
+                  style={[
+                    S.buttonStyles.longButton,
+                    {
+                      backgroundColor: buttonDisabled
+                        ? S.colors.secondary
+                        : S.colors.primary,
+                    },
+                  ]}
+                  onPress={goOnboarding}
+                  disabled={buttonDisabled}
+                >
+                  <Text
+                    style={[
+                      styles.bigText,
+                      {
+                        color: "white",
+                      },
+                    ]}
+                  >
+                    시작하기
+                  </Text>
+                </TouchableView>
+              </View>
+              <View style={{ flex: 3 }}></View>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, justifyContent: "flex-end" }}>
+                <Text style={[styles.mediumText]}>
+                  이미 계정을 갖고 계신가요?
+                </Text>
+              </View>
+              <TouchableView
+                style={[
+                  S.buttonStyles.longButton,
+                  {
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    borderColor: S.colors.primary,
+                  },
+                ]}
+                onPress={goLogin}
+              >
+                <Text style={[styles.bigText, { color: S.colors.primary }]}>
+                  로그인하기
+                </Text>
+              </TouchableView>
+              <View style={{ flex: 2 }}></View>
+            </View>
           </View>
-          <TouchableView
-            style={[
-              S.buttonStyles.longButton,
-              {
-                backgroundColor: "white",
-                borderWidth: 2,
-                borderColor: S.colors.primary,
-              },
-            ]}
-            onPress={goLogin}
-          >
-            <Text style={[styles.bigText, { color: S.colors.primary }]}>
-              로그인하기
-            </Text>
-          </TouchableView>
-          <View style={{ flex: 2 }}></View>
         </View>
-      </View>
+      )}
     </SafeAreaView>
   );
 }

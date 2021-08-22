@@ -52,9 +52,11 @@ export default function Login() {
       })
       .catch((e) => {
         if (e.response.status === 401) {
-          Alert.alert("이메일 또는 비밀번호를 확인해주세요");
+          Alert.alert("이메일 또는 비밀번호를 확인해주세요", "", [
+            { text: "확인" },
+          ]);
         } else {
-          Alert.alert("비정상적인 접근입니다");
+          Alert.alert("비정상적인 접근입니다", "", [{ text: "확인" }]);
         }
       });
   }, [email, password]);

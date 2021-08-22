@@ -12,17 +12,21 @@ import * as A from "../store/asyncStorage";
 import realm from "../models";
 import Realm from "realm";
 import axios from "axios";
+import { ActivityIndicator } from "react-native-paper";
 
 export default function RequestAuthorization() {
   const store = useStore();
   const dispatch = useDispatch();
   const { church, sex, district, group, services } =
     store.getState().onBoarding;
+  const { email } = store.getState().login.loggedUser;
   const navigation = useNavigation();
   const [inviteCode, setInviteCode] = useState<string>(
     store.getState().onBoarding.inviteCode
   );
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+
   const goBack = useCallback(
     () => navigation.canGoBack() && navigation.goBack(),
     []
@@ -32,6 +36,7 @@ export default function RequestAuthorization() {
   }, []);
 
   const requestAuthorization = useCallback(() => {
+    setLoading(true);
     // inviteCode 유효성 검사
     U.readFromStorage("accessJWT").then((accessToken) => {
       axios
@@ -92,6 +97,7 @@ export default function RequestAuthorization() {
               "Groups",
               {
                 id: ids.churchGroupId.data.id,
+                userId: email,
                 name: church,
                 church: church,
                 isPublic: true,
@@ -103,6 +109,7 @@ export default function RequestAuthorization() {
               "Follows",
               {
                 groupId: ids.churchGroupId.data.id,
+                userId: email,
               },
               Realm.UpdateMode.Modified
             );
@@ -110,6 +117,7 @@ export default function RequestAuthorization() {
               "BelongTos",
               {
                 groupId: ids.churchGroupId.data.id,
+                userId: email,
               },
               Realm.UpdateMode.Modified
             );
@@ -117,6 +125,7 @@ export default function RequestAuthorization() {
               "Groups",
               {
                 id: ids.districtGroupId.data.id,
+                userId: email,
                 name: district,
                 church: church,
                 isPublic: true,
@@ -128,6 +137,7 @@ export default function RequestAuthorization() {
               "Follows",
               {
                 groupId: ids.districtGroupId.data.id,
+                userId: email,
               },
               Realm.UpdateMode.Modified
             );
@@ -135,6 +145,7 @@ export default function RequestAuthorization() {
               "BelongTos",
               {
                 groupId: ids.districtGroupId.data.id,
+                userId: email,
               },
               Realm.UpdateMode.Modified
             );
@@ -142,6 +153,7 @@ export default function RequestAuthorization() {
               "Groups",
               {
                 id: ids.groupGroupId.data.id,
+                userId: email,
                 name: group,
                 church: church,
                 isPublic: true,
@@ -153,6 +165,7 @@ export default function RequestAuthorization() {
               "Follows",
               {
                 groupId: ids.groupGroupId.data.id,
+                userId: email,
               },
               Realm.UpdateMode.Modified
             );
@@ -160,6 +173,7 @@ export default function RequestAuthorization() {
               "BelongTos",
               {
                 groupId: ids.groupGroupId.data.id,
+                userId: email,
               },
               Realm.UpdateMode.Modified
             );
@@ -168,6 +182,7 @@ export default function RequestAuthorization() {
                 "Groups",
                 {
                   id: serviceGroup.id,
+                  userId: email,
                   name: serviceGroup.name,
                   church: serviceGroup.church,
                   isPublic: true,
@@ -179,6 +194,7 @@ export default function RequestAuthorization() {
                 "Follows",
                 {
                   groupId: serviceGroup.id,
+                  userId: email,
                 },
                 Realm.UpdateMode.Modified
               );
@@ -186,6 +202,7 @@ export default function RequestAuthorization() {
                 "BelongTos",
                 {
                   groupId: serviceGroup.id,
+                  userId: email,
                 },
                 Realm.UpdateMode.Modified
               );
@@ -208,15 +225,22 @@ export default function RequestAuthorization() {
             )
             .then((response) => {
               if (response.status === 201) {
-                navigation.navigate("TabNavigator");
+                setLoading(false);
+                Alert.alert("환영합니다!", "", [
+                  {
+                    text: "확인",
+                    onPress: () => navigation.navigate("TabNavigator"),
+                  },
+                ]);
               }
             });
         })
         .catch((e) => {
+          setLoading(false);
           const errorStatus = e.response.status;
           if (errorStatus === 400) {
             // 초대코드 오류
-            Alert.alert("초대코드를 확인해주세요");
+            Alert.alert("초대코드를 확인해주세요", "", [{ text: "확인" }]);
           } else if (errorStatus === 401) {
             // accessToken 만료
             U.readFromStorage("refreshJWT").then((refreshToken) => {
@@ -253,83 +277,93 @@ export default function RequestAuthorization() {
 
   return (
     <SafeAreaView style={[styles.container]}>
-      <NavigationHeader
-        Left={() => (
-          <TouchableView onPress={goBack}>
-            <Icon name="chevron-back" size={30}></Icon>
-          </TouchableView>
-        )}
-      ></NavigationHeader>
-      <View style={[styles.QAContainer]}>
-        <View style={{ flex: 1 }}></View>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text style={[styles.questionText]}>초대코드를 입력해주세요</Text>
-        </View>
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <TextInput
-            defaultValue={inviteCode}
-            style={[styles.text]}
-            onChangeText={setInviteCode}
-            placeholder="초대코드 입력"
-            placeholderTextColor="gray"
-            autoCapitalize="none"
-          />
-        </View>
-        <View style={{ flex: 1 }}></View>
-      </View>
-      <View style={[styles.nextContainer]}>
+      {loading === true ? (
+        <ActivityIndicator
+          style={{ flex: 1 }}
+          size="large"
+          color={S.colors.primary}
+        />
+      ) : (
         <View style={{ flex: 1 }}>
-          <View style={{ flex: 1 }}></View>
-          <View style={{ flex: 2 }}></View>
-          <View style={{ flex: 1 }}>
-            <TouchableView
-              style={[
-                S.buttonStyles.longButton,
-                {
-                  backgroundColor: buttonDisabled
-                    ? S.colors.secondary
-                    : S.colors.primary,
-                },
-              ]}
-              disabled={buttonDisabled}
-              onPress={requestAuthorization}
+          <NavigationHeader
+            Left={() => (
+              <TouchableView onPress={goBack}>
+                <Icon name="chevron-back" size={30}></Icon>
+              </TouchableView>
+            )}
+          ></NavigationHeader>
+          <View style={[styles.QAContainer]}>
+            <View style={{ flex: 1 }}></View>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
             >
-              <Text style={[styles.nextText]}>성도 인증하기</Text>
-            </TouchableView>
+              <Text style={[styles.questionText]}>초대코드를 입력해주세요</Text>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <TextInput
+                defaultValue={inviteCode}
+                style={[styles.text]}
+                onChangeText={setInviteCode}
+                placeholder="초대코드 입력"
+                placeholderTextColor="gray"
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={{ flex: 1 }}></View>
+          </View>
+          <View style={[styles.nextContainer]}>
+            <View style={{ flex: 1 }}>
+              <View style={{ flex: 1 }}></View>
+              <View style={{ flex: 2 }}></View>
+              <View style={{ flex: 1 }}>
+                <TouchableView
+                  style={[
+                    S.buttonStyles.longButton,
+                    {
+                      backgroundColor: buttonDisabled
+                        ? S.colors.secondary
+                        : S.colors.primary,
+                    },
+                  ]}
+                  disabled={buttonDisabled}
+                  onPress={requestAuthorization}
+                >
+                  <Text style={[styles.nextText]}>성도 인증하기</Text>
+                </TouchableView>
+              </View>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flex: 1 }}></View>
+              <TouchableView
+                style={[
+                  S.buttonStyles.longButton,
+                  {
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    borderColor: S.colors.primary,
+                  },
+                ]}
+                onPress={doNextTime}
+              >
+                <Text style={[styles.nextText, { color: S.colors.primary }]}>
+                  다음에 하기
+                </Text>
+              </TouchableView>
+              <View style={{ flex: 2 }}></View>
+            </View>
           </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <View style={{ flex: 1 }}></View>
-          <TouchableView
-            style={[
-              S.buttonStyles.longButton,
-              {
-                backgroundColor: "white",
-                borderWidth: 2,
-                borderColor: S.colors.primary,
-              },
-            ]}
-            onPress={doNextTime}
-          >
-            <Text style={[styles.nextText, { color: S.colors.primary }]}>
-              다음에 하기
-            </Text>
-          </TouchableView>
-          <View style={{ flex: 2 }}></View>
-        </View>
-      </View>
+      )}
     </SafeAreaView>
   );
 }

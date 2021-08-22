@@ -23,19 +23,22 @@ import moment from "moment";
 import realm from "../models";
 import Realm from "realm";
 import axios from "axios";
-import { useDispatch } from "react-redux";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { useDispatch, useStore } from "react-redux";
+import { ActivityIndicator } from "react-native-paper";
 
 /*
 Todo
-3. 로컬 디비에서 deleted 데이터 삭제 로직 추가
  */
 
 export default function Home() {
   LogBox.ignoreLogs([
     "Warning: Encountered two children with the same key, `1`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.",
   ]); // toSetMarkedDatesObjects 함수에서 objectKey 중복에 대한 경고 무시하기
+  const store = useStore();
+  console.log(store.getState());
+  const { email } = store.getState().login.loggedUser;
   const [refresh, setRefresh] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [today, setToday] = useState<string>(moment().format("YYYY-MM-DD"));
   const [markedDates, setMarkedDates] = useState({});
   const [pastSelectedDate, setPastSelectedDate] = useState<string>();
@@ -151,6 +154,7 @@ export default function Home() {
                 "BelongTos",
                 {
                   groupId: data.GroupId,
+                  userId: email,
                   createdAt: data.createdAt,
                   updatedAt: data.updatedAt,
                   deletedAt: data.deletedAt,
@@ -171,6 +175,7 @@ export default function Home() {
                 "Follows",
                 {
                   groupId: data.GroupId,
+                  userId: email,
                   createdAt: data.createdAt,
                   updatedAt: data.updatedAt,
                   deletedAt: data.deletedAt,
@@ -183,7 +188,7 @@ export default function Home() {
           // follow 그룹에 속한 이벤트 동기화
           const followGroupIds = await realm
             .objects("Follows")
-            .filtered("deletedAt == null");
+            .filtered(`deletedAt == null and userId == "${email}"`);
           await followGroupIds.forEach(async (groupId: any) => {
             const response = await axios.get("/api/events/", {
               params: {
@@ -204,6 +209,7 @@ export default function Home() {
                   "Events",
                   {
                     id: data.id,
+                    userId: email,
                     groupId: data.GroupId,
                     title: data.title,
                     date: data.date.split("T")[0],
@@ -239,14 +245,16 @@ export default function Home() {
       // 캘린더 마킹
       const toBeMarkedDates = realm
         .objects("Events")
-        .filtered("deletedAt == null");
+        .filtered(`deletedAt == null && userId = "${email}"`);
       const toBeMarkedDatesObjects = toSetMarkedDatesObjects(toBeMarkedDates);
       setMarkedDates(toBeMarkedDatesObjects);
 
       // 오늘의 아젠다 불러오기
       const todayAgenda = realm
         .objects("Events")
-        .filtered(`date == "${today}" and deletedAt == null`)
+        .filtered(
+          `date == "${today}" && deletedAt == null && userId == "${email}"`
+        )
         .sorted("startTime");
       setAgendaData(toAgendaType(todayAgenda));
 
@@ -254,7 +262,7 @@ export default function Home() {
       realm.write(() => {
         const deletedEvents = realm
           .objects("Events")
-          .filtered("deletedAt != null");
+          .filtered(`deletedAt != null && userId == "${email}"`);
         realm.delete(deletedEvents);
       });
       setRefresh(false);
@@ -262,39 +270,52 @@ export default function Home() {
   }, [refresh]); // 새로고침 dependancy로 넣기 (추가)
 
   useEffect(() => {
-    setTimeout(() => {
+    const id = setTimeout(() => {
       setRefresh(true);
+      setLoading(false);
       SplashScreen.hide();
     }, 1500);
+    return () => clearTimeout(id);
   }, []);
 
   return (
     <SafeAreaView style={[styles.container]}>
-      <NavigationHeader
-        Left={() => <TextInput></TextInput>}
-        Right={() => <TouchableView></TouchableView>}
-      ></NavigationHeader>
-      <View style={[styles.calendarViewContainer]}>
-        <CalendarView onDayPress={onDayPress} markedDates={markedDates} />
-      </View>
-      <View style={[styles.agendaContainer]}>
-        <View
-          style={{
-            marginBottom: 10,
-            flexDirection: "row",
-          }}
-        >
-          <Text style={[styles.agendaText]}>일정</Text>
-        </View>
-        <SectionList
-          stickySectionHeadersEnabled={false}
-          sections={agendaData}
-          renderItem={({ item, section }) => (
-            <Agenda title={section.title} data={item} />
-          )}
-          keyExtractor={(item, index) => item.group + index}
+      {loading && (
+        <ActivityIndicator
+          style={{ flex: 1 }}
+          size="large"
+          color={S.colors.primary}
         />
-      </View>
+      )}
+      {!loading && (
+        <View style={{ flex: 1 }}>
+          <NavigationHeader
+            Left={() => <TextInput></TextInput>}
+            Right={() => <TouchableView></TouchableView>}
+          ></NavigationHeader>
+          <View style={[styles.calendarViewContainer]}>
+            <CalendarView onDayPress={onDayPress} markedDates={markedDates} />
+          </View>
+          <View style={[styles.agendaContainer]}>
+            <View
+              style={{
+                marginBottom: 10,
+                flexDirection: "row",
+              }}
+            >
+              <Text style={[styles.agendaText]}>일정</Text>
+            </View>
+            <SectionList
+              stickySectionHeadersEnabled={false}
+              sections={agendaData}
+              renderItem={({ item, section }) => (
+                <Agenda title={section.title} data={item} />
+              )}
+              keyExtractor={(item, index) => item.group + index}
+            />
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

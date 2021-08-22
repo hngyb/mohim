@@ -2,6 +2,7 @@ export const GroupSchema = {
   name: "Groups",
   properties: {
     id: "int",
+    userId: "string",
     name: "string",
     church: "string",
     isPublic: "bool",

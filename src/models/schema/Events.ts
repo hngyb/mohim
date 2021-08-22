@@ -2,6 +2,7 @@ export const EventSchema = {
   name: "Events",
   properties: {
     id: "int",
+    userId: "string",
     groupId: "int",
     title: "string",
     date: { type: "string", indexed: true },
