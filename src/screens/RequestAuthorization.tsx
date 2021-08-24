@@ -101,6 +101,7 @@ export default function RequestAuthorization() {
                 name: church,
                 church: church,
                 isPublic: true,
+                category: ids.churchGroupId.data.category,
                 color: randomColor(S.colorPalettes),
               },
               Realm.UpdateMode.Modified
@@ -129,6 +130,7 @@ export default function RequestAuthorization() {
                 name: district,
                 church: church,
                 isPublic: true,
+                category: ids.districtGroupId.data.category,
                 color: randomColor(S.colorPalettes),
               },
               Realm.UpdateMode.Modified
@@ -157,6 +159,7 @@ export default function RequestAuthorization() {
                 name: group,
                 church: church,
                 isPublic: true,
+                category: ids.groupGroupId.data.category,
                 color: randomColor(S.colorPalettes),
               },
               Realm.UpdateMode.Modified
@@ -186,6 +189,7 @@ export default function RequestAuthorization() {
                   name: serviceGroup.name,
                   church: serviceGroup.church,
                   isPublic: true,
+                  category: serviceGroup.category,
                   color: randomColor(S.colorPalettes),
                 },
                 Realm.UpdateMode.Modified

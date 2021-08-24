@@ -1,12 +1,8 @@
 import React from "react";
-import {
-  CardStyleInterpolators,
-  createStackNavigator,
-} from "@react-navigation/stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import Auth from "./Auth";
 import Login from "./Login";
 import SignUp from "./SignUp";
-import { Button } from "react-native";
 
 const Stack = createStackNavigator();
 

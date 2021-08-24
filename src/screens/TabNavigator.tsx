@@ -1,11 +1,10 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Colors } from "react-native-paper";
-import Color from "color";
 import Icon from "react-native-vector-icons/Ionicons";
 import Home from "./Home";
-import MyPage from "./MyPage";
 import Search from "./Search";
+import MyPageNavigator from "./MyPageNavigator";
 import type { RouteProp, ParamListBase } from "@react-navigation/native";
 import * as S from "./Styles";
 
@@ -60,7 +59,7 @@ export default function TabNavigator() {
       ></Tab.Screen>
       <Tab.Screen
         name="MyPage"
-        component={MyPage}
+        component={MyPageNavigator}
         options={{ tabBarLabel: "마이페이지" }}
       ></Tab.Screen>
     </Tab.Navigator>

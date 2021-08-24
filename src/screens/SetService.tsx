@@ -124,7 +124,7 @@ export default function SetService() {
             alignItems: "center",
           }}
         >
-          <Text style={[styles.questionText]}>봉사 그룹을 선택해주세요</Text>
+          <Text style={[styles.questionText]}>봉사를 선택해주세요</Text>
         </View>
         <View style={{ flex: 2 }}>
           <DropDownPicker

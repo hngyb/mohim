@@ -49,7 +49,7 @@ export default function SetDistrict() {
             alignItems: "center",
           }}
         >
-          <Text style={[styles.questionText]}>소속 구역을 선택해주세요</Text>
+          <Text style={[styles.questionText]}>구역을 선택해주세요</Text>
         </View>
         <View style={{ flex: 2 }}>
           <Picker

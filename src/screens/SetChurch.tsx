@@ -42,7 +42,7 @@ export default function SetChurch() {
             alignItems: "center",
           }}
         >
-          <Text style={[styles.questionText]}>소속 교회를 선택해주세요</Text>
+          <Text style={[styles.questionText]}>교회를 선택해주세요</Text>
         </View>
         <View style={{ flex: 2 }}>
           <Picker

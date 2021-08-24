@@ -18,6 +18,7 @@ import {
 } from "../components";
 import * as U from "../utils";
 import * as L from "../store/latestUpdate";
+import * as I from "../store/isAuthorized";
 import * as S from "./Styles";
 import moment from "moment";
 import realm from "../models";
@@ -35,7 +36,6 @@ export default function Home() {
     "Warning: Encountered two children with the same key, `1`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.",
   ]); // toSetMarkedDatesObjects 함수에서 objectKey 중복에 대한 경고 무시하기
   const store = useStore();
-  console.log(store.getState());
   const { email } = store.getState().login.loggedUser;
   const [refresh, setRefresh] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
@@ -143,6 +143,8 @@ export default function Home() {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (isAuthorized.data.isAuthorized === true) {
+          // isAuthorized 상태 저장
+          dispatch(I.setIsAuthorized(isAuthorized.data.isAuthorized));
           // belongTo 서버 동기화
           const belongToGroups = await axios.get("/api/belong-tos/", {
             headers: { Authorization: `Bearer ${accessToken}` },

@@ -50,7 +50,7 @@ export default function SetGroup() {
             alignItems: "center",
           }}
         >
-          <Text style={[styles.questionText]}>소속 그룹을 선택해주세요</Text>
+          <Text style={[styles.questionText]}>소속을 선택해주세요</Text>
         </View>
         <View style={{ flex: 2 }}>
           <Picker
