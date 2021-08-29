@@ -9,8 +9,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useStore } from "react-redux";
 import { ActivityIndicator, Avatar, Card } from "react-native-paper";
 import * as S from "./Styles";
-import { ScrollView } from "react-native-gesture-handler";
-import moment from "moment";
+import Modal from "react-native-modal";
 
 export default function BelongToGroups() {
   interface belongToType {
@@ -21,11 +20,17 @@ export default function BelongToGroups() {
     fellowship?: Array<any>;
   }
   const [loading, setLoading] = useState(false);
+  const [isColorPalettesModalVisible, setColorPalettesModalVisible] =
+    useState(false);
   const [data, setData] = useState<belongToType>({});
   const store = useStore();
   const { email } = store.getState().login.loggedUser;
   const navigation = useNavigation();
   const goBack = useCallback(() => navigation.navigate("MyPage"), []);
+  const toggleColorPalettesModal = useCallback(() => {
+    setColorPalettesModalVisible(!isColorPalettesModalVisible);
+  }, [isColorPalettesModalVisible]);
+
   const renderItem = useCallback((item) => {
     return (
       <View style={{ flex: 1 }}>
@@ -37,13 +42,15 @@ export default function BelongToGroups() {
                 alignItems: "center",
               }}
             >
-              <Avatar.Text
-                label={item.item.name[0]}
-                size={50}
-                style={{ backgroundColor: item.item.color }}
-                color="white"
-                labelStyle={{ fontFamily: S.fonts.bold, fontSize: 25 }}
-              />
+              <TouchableView onPress={toggleColorPalettesModal}>
+                <Avatar.Text
+                  label={item.item.name[0]}
+                  size={50}
+                  style={{ backgroundColor: item.item.color }}
+                  color="white"
+                  labelStyle={{ fontFamily: S.fonts.bold, fontSize: 25 }}
+                />
+              </TouchableView>
               <View
                 style={{
                   paddingHorizontal: 15,
@@ -82,9 +89,9 @@ export default function BelongToGroups() {
                     : item.item.category === "district"
                     ? "구역"
                     : item.item.category === "group"
-                    ? "소속 그룹"
+                    ? "소속"
                     : item.item.category === "service"
-                    ? "봉사 그룹"
+                    ? "봉사"
                     : item.item.category === "fellowship"
                     ? "교제"
                     : ""}
@@ -204,6 +211,20 @@ export default function BelongToGroups() {
           </TouchableView>
         )}
       ></NavigationHeader>
+      <View>
+        <Modal
+          isVisible={isColorPalettesModalVisible}
+          onSwipeComplete={() => setColorPalettesModalVisible(false)}
+          swipeDirection="down"
+        >
+          <View style={{ flex: 1 }}>
+            <Text>I am the modal content!</Text>
+            <TouchableView onPress={toggleColorPalettesModal}>
+              <Text>onpress</Text>
+            </TouchableView>
+          </View>
+        </Modal>
+      </View>
       <FlatList
         style={[styles.flatListContainer]}
         ListHeaderComponent={

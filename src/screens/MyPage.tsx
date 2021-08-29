@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useStore } from "react-redux";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
+import { ScrollView } from "react-native-gesture-handler";
 
 // todo:
 // 1. logout할 때, latest update 지우기
@@ -27,7 +28,12 @@ export default function MyPage() {
   }, []);
 
   return (
-    <SafeAreaView style={[styles.container]}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: isAuthorized ? S.colors.primary : "white" },
+      ]}
+    >
       <NavigationHeader
         Right={() => <TouchableView></TouchableView>}
       ></NavigationHeader>
@@ -68,71 +74,125 @@ export default function MyPage() {
         </View>
       )}
       {isAuthorized && (
-        <View style={{ flex: 1 }}>
-          <View style={[styles.profileContainer]}>
+        <View style={{ height: "100%" }}>
+          <View
+            style={[
+              styles.profileContainer,
+              { backgroundColor: S.colors.primary },
+            ]}
+          >
             <View style={{ flex: 1 }}>
               <Text
                 style={[
                   styles.bigText,
-                  { textAlign: "left", fontSize: 35, color: S.colors.primary },
+                  { textAlign: "left", fontSize: 35, color: "white" },
                 ]}
               >
-                {name} 님
+                {name}님
               </Text>
             </View>
             <View
               style={{
                 flex: 1,
-                flexDirection: "row",
-                justifyContent: "space-around",
+                backgroundColor: "white",
+                borderRadius: 10,
               }}
             >
-              <TouchableView
-                style={{ flexDirection: "column" }}
-                onPress={goBelongToGroups}
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                }}
               >
-                <FontAwesome5
-                  name="church"
-                  size={35}
-                  color={S.colors.primary}
-                  style={{ alignSelf: "center" }}
-                />
-                <Text
-                  style={[
-                    styles.bigText,
-                    { paddingTop: 5, color: S.colors.primary },
-                  ]}
+                <TouchableView
+                  style={{ flexDirection: "column" }}
+                  onPress={goBelongToGroups}
                 >
-                  소속 그룹
-                </Text>
+                  <FontAwesome5
+                    name="church"
+                    size={35}
+                    color={S.colors.primary}
+                    style={{ alignSelf: "center" }}
+                  />
+                  <Text
+                    style={[
+                      styles.bigText,
+                      { paddingTop: 5, color: S.colors.primary },
+                    ]}
+                  >
+                    소속 그룹
+                  </Text>
+                </TouchableView>
+                <TouchableView
+                  style={{ flexDirection: "column" }}
+                  onPress={goFollowGroups}
+                >
+                  <FontAwesome
+                    name="group"
+                    size={35}
+                    color={S.colors.primary}
+                    style={{ alignSelf: "center" }}
+                  />
+                  <Text
+                    style={[
+                      styles.bigText,
+                      { paddingTop: 5, color: S.colors.primary },
+                    ]}
+                  >
+                    팔로우 그룹
+                  </Text>
+                </TouchableView>
+              </View>
+            </View>
+            <View style={{ flex: 0.2 }}></View>
+          </View>
+          <View style={[styles.menuContainer]}>
+            <View style={{ flex: 1 }}>
+              <TouchableView
+                style={{
+                  flex: 1,
+                  borderBottomColor: S.colors.secondary,
+                  borderBottomWidth: 1,
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={[styles.mediumText]}>프로필 관리</Text>
               </TouchableView>
               <TouchableView
-                style={{ flexDirection: "column" }}
-                onPress={goFollowGroups}
+                style={{
+                  flex: 1,
+                  borderBottomColor: S.colors.secondary,
+                  borderBottomWidth: 1,
+                  justifyContent: "center",
+                }}
               >
-                <FontAwesome
-                  name="group"
-                  size={35}
-                  color={S.colors.primary}
-                  style={{ alignSelf: "center" }}
-                />
-                <Text
-                  style={[
-                    styles.bigText,
-                    { paddingTop: 5, color: S.colors.primary },
-                  ]}
-                >
-                  팔로우 그룹
-                </Text>
+                <Text style={[styles.mediumText]}>성도 초대하기</Text>
+              </TouchableView>
+              <TouchableView
+                style={{
+                  flex: 1,
+                  borderBottomColor: S.colors.secondary,
+                  borderBottomWidth: 1,
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={[styles.mediumText]}>문의하기</Text>
+              </TouchableView>
+              <TouchableView
+                style={{
+                  flex: 1,
+                  borderBottomColor: S.colors.secondary,
+                  borderBottomWidth: 1,
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={[styles.mediumText]}>로그아웃</Text>
               </TouchableView>
             </View>
+            <View style={{ flex: 1 }}></View>
           </View>
-          <View
-            style={[
-              styles.menuContainer,
-              { borderTopColor: S.colors.secondary, borderTopWidth: 8 },
-            ]}
-          ></View>
         </View>
       )}
     </SafeAreaView>
@@ -148,12 +208,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
   },
   menuContainer: {
-    flex: 2,
+    flex: 3,
     paddingHorizontal: "5%",
+    backgroundColor: "white",
   },
   bigText: {
     fontFamily: S.fonts.bold,
     textAlign: "center",
     fontSize: 18,
+  },
+  mediumText: {
+    fontFamily: S.fonts.medium,
+    fontSize: 15,
   },
 });
