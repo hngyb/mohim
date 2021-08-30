@@ -1,18 +1,23 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useCallback } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useStore } from "react-redux";
+import { useDispatch, useStore } from "react-redux";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
-import { ScrollView } from "react-native-gesture-handler";
+import * as L from "../store/login";
+import * as D from "../store/latestUpdate";
+import * as U from "../utils";
+import * as A from "../store/asyncStorage";
+import * as I from "../store/isAuthorized";
 
 // todo:
 // 1. logout할 때, latest update 지우기
 export default function MyPage() {
   const store = useStore();
+  const dispatch = useDispatch();
   const navigation = useNavigation();
   const { isAuthorized } = store.getState().isAuthorized;
   const { name } = store.getState().login.loggedUser;
@@ -25,6 +30,18 @@ export default function MyPage() {
   }, []);
   const goFollowGroups = useCallback(() => {
     navigation.navigate("FollowGroups");
+  }, []);
+
+  const logout = useCallback(() => {
+    dispatch(L.logoutAction); // logout 확인 필요
+    dispatch(A.setJWT("", ""));
+    dispatch(D.setUpdatedDate(""));
+    dispatch(I.setIsAuthorized(false));
+    U.removeStorage(L.loggedUserKey);
+    U.removeStorage("accessJWT");
+    U.removeStorage("refreshJWT");
+    U.removeStorage("latestUpdatedDate");
+    navigation.navigate("Auth");
   }, []);
 
   return (
@@ -186,6 +203,17 @@ export default function MyPage() {
                   borderBottomColor: S.colors.secondary,
                   borderBottomWidth: 1,
                   justifyContent: "center",
+                }}
+                onPress={() => {
+                  Alert.alert("로그아웃하시겠습니까?", "", [
+                    {
+                      text: "아니요",
+                    },
+                    {
+                      text: "네",
+                      onPress: logout,
+                    },
+                  ]);
                 }}
               >
                 <Text style={[styles.mediumText]}>로그아웃</Text>

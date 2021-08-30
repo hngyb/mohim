@@ -16,8 +16,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
-import { Colors } from "react-native-paper";
-import Color from "color";
 
 /*
 Todo
