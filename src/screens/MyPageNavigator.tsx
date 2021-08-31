@@ -3,6 +3,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import MyPage from "./MyPage";
 import BelongToGroups from "./BelongToGroups";
 import FollowGroups from "./FollowGroups";
+import ColorPalettesModal from "./ColorPalettesModal";
 
 const Stack = createStackNavigator();
 

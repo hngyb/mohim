@@ -22,7 +22,16 @@ export default function BelongToGroups() {
   const [loading, setLoading] = useState(false);
   const [isColorPalettesModalVisible, setColorPalettesModalVisible] =
     useState(false);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [colorPalettesIndex, setColorPalettesIndex] = useState([
+    ...Array(Math.ceil(S.colorPalettes.length / 5)).keys(),
+  ]);
   const [data, setData] = useState<belongToType>({});
+  const [parentWidth, setParentWidth] = useState(0);
+  const onLayout = useCallback((event) => {
+    const { width } = event.nativeEvent.layout;
+    setParentWidth(width);
+  }, []);
   const store = useStore();
   const { email } = store.getState().login.loggedUser;
   const navigation = useNavigation();
@@ -198,8 +207,37 @@ export default function BelongToGroups() {
       })
       .then(() => {
         setLoading(false);
+        setRefresh(false);
       })
       .catch((e) => Alert.alert("데이터를 불러올 수 없습니다."));
+  }, []);
+
+  const renderColorPalettes = useCallback((index) => {
+    return (
+      <View
+        key={index}
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
+      >
+        {S.colorPalettes.slice(index * 5, index * 5 + 5).map((color) => {
+          return (
+            <TouchableView
+              key={color}
+              style={[
+                styles.colorCircle,
+                {
+                  backgroundColor: color,
+                  width: parentWidth * 0.15,
+                  height: parentWidth * 0.15,
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
+    );
   }, []);
 
   return (
@@ -211,20 +249,6 @@ export default function BelongToGroups() {
           </TouchableView>
         )}
       ></NavigationHeader>
-      <View>
-        <Modal
-          isVisible={isColorPalettesModalVisible}
-          onSwipeComplete={() => setColorPalettesModalVisible(false)}
-          swipeDirection="down"
-        >
-          <View style={{ flex: 1 }}>
-            <Text>I am the modal content!</Text>
-            <TouchableView onPress={toggleColorPalettesModal}>
-              <Text>onpress</Text>
-            </TouchableView>
-          </View>
-        </Modal>
-      </View>
       <FlatList
         style={[styles.flatListContainer]}
         ListHeaderComponent={
@@ -429,6 +453,61 @@ export default function BelongToGroups() {
           </>
         }
       />
+      <Modal
+        style={{
+          margin: 0,
+          justifyContent: "flex-end",
+        }}
+        isVisible={isColorPalettesModalVisible}
+        onSwipeComplete={() => setColorPalettesModalVisible(false)}
+        swipeDirection="down"
+      >
+        <View
+          style={{
+            flex: 0.7,
+            backgroundColor: "white",
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            paddingHorizontal: "5%",
+          }}
+        >
+          <View
+            style={{
+              height: "8%",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <TouchableView
+              onPress={toggleColorPalettesModal}
+              style={{
+                alignSelf: "center",
+                flex: 1,
+              }}
+            >
+              <Icon name="close" size={25}></Icon>
+            </TouchableView>
+            <Text
+              style={[
+                styles.text,
+                {
+                  alignSelf: "center",
+                  textAlign: "center",
+                  flex: 1,
+                },
+              ]}
+            >
+              색상
+            </Text>
+            <View style={{ flex: 1 }}></View>
+          </View>
+          <View style={{ flex: 1 }} onLayout={onLayout}>
+            {colorPalettesIndex.map((index) => {
+              return renderColorPalettes(index);
+            })}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -444,5 +523,9 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: S.fonts.bold,
     fontSize: 20,
+  },
+  colorCircle: {
+    borderRadius: 100 / 2,
+    margin: 5,
   },
 });

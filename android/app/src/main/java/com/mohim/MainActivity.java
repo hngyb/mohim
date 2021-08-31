@@ -15,9 +15,10 @@ import expo.modules.splashscreen.SplashScreenImageResizeMode;
 public class MainActivity extends ReactActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-SplashScreen.show(this, R.style.SplashScreenTheme);    super.onCreate(null);
-SplashScreen.show(this, R.style.SplashScreenTheme);    // SplashScreen.show(...) has to be called after super.onCreate(...)
-SplashScreen.show(this, R.style.SplashScreenTheme);    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
+    super.onCreate(null);
+    SplashScreen.show(this, R.style.SplashScreenTheme);
+    SplashScreen.show(this, R.style.SplashScreenTheme);    // SplashScreen.show(...) has to be called after super.onCreate(...)
+    SplashScreen.show(this, R.style.SplashScreenTheme);    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
     SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView.class, false);
   }
 

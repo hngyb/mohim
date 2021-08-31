@@ -13,18 +13,15 @@ import * as S from "./Styles";
 
 export default function FollowGroups() {
   const [loading, setLoading] = useState(false);
-  const [isColorPalettesModalVisible, setColorPalettesModalVisible] =
-    useState(false);
   const [data, setData] = useState([]);
   const store = useStore();
   const { email } = store.getState().login.loggedUser;
   const navigation = useNavigation();
-
-  const toggleColorPalettesModal = useCallback(() => {
-    setColorPalettesModalVisible(!isColorPalettesModalVisible);
-  }, [isColorPalettesModalVisible]);
-
   const goBack = useCallback(() => navigation.navigate("MyPage"), []);
+  const openColorPalettesModal = useCallback(
+    () => navigation.navigate("ColorPalettesModal"),
+    []
+  );
   const renderItem = useCallback((item) => {
     return (
       <View style={{ flex: 1 }}>
@@ -36,7 +33,7 @@ export default function FollowGroups() {
                 alignItems: "center",
               }}
             >
-              <TouchableView onPress={toggleColorPalettesModal}>
+              <TouchableView onPress={openColorPalettesModal}>
                 <Avatar.Text
                   label={item.item.name[0]}
                   size={50}
@@ -149,16 +146,6 @@ export default function FollowGroups() {
           </TouchableView>
         )}
       ></NavigationHeader>
-      <View>
-        <Modal isVisible={isColorPalettesModalVisible}>
-          <View style={{ flex: 1 }}>
-            <Text>I am the modal content!</Text>
-            <TouchableView onPress={toggleColorPalettesModal}>
-              <Text>onpress</Text>
-            </TouchableView>
-          </View>
-        </Modal>
-      </View>
       <FlatList
         style={[styles.flatListContainer]}
         ListHeaderComponent={

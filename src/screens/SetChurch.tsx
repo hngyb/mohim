@@ -6,11 +6,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
-import { Colors } from "react-native-paper";
-import Color from "color";
 import { useDispatch, useStore } from "react-redux";
 import * as O from "../store/onBoarding";
 import { Picker } from "@react-native-picker/picker";
+import axios from "axios";
+import { concat } from "lodash";
 
 export default function SetChurch() {
   const store = useStore();
@@ -18,12 +18,21 @@ export default function SetChurch() {
   const dispatch = useDispatch();
   const { church, sex, district, group, services, inviteCode } =
     store.getState().onBoarding;
+  const { accessJWT } = store.getState().asyncStorage;
   const [selectedChurch, setSelectedChurch] = useState<string>(church);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const goNext = useCallback(() => {
     navigation.navigate("SetSex");
   }, []);
+  const [churches, setChurches] = useState<Array<any>>([]);
   useEffect(() => {
+    const response = axios
+      .get("/api/groups/church-list", {
+        headers: { Authorization: `Bearer ${accessJWT}` },
+      })
+      .then((response) => {
+        setChurches(response.data);
+      });
     SplashScreen.hide();
   }, []);
   useEffect(() => {
@@ -68,7 +77,9 @@ export default function SetChurch() {
               );
             }}
           >
-            <Picker.Item label="일산교회" value="일산교회" />
+            {churches.map((church) => {
+              return <Picker.Item label={church.name} value={church.name} />;
+            })}
           </Picker>
         </View>
       </View>
