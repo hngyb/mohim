@@ -20,6 +20,7 @@ export default function BelongToGroups() {
     fellowship?: Array<any>;
   }
   const [loading, setLoading] = useState(false);
+  const [render, setRender] = useState(false);
   const [isColorPalettesModalVisible, setColorPalettesModalVisible] =
     useState(false);
   const [selectedColor, setSelectedColor] = useState("");
@@ -200,6 +201,11 @@ export default function BelongToGroups() {
   };
 
   useEffect(() => {
+    setTimeout(() => {
+      setRender(true);
+    }, 1500);
+  });
+  useEffect(() => {
     setLoading(true);
     getBelongToGroups()
       .then((belongTos) => {
@@ -207,12 +213,11 @@ export default function BelongToGroups() {
       })
       .then(() => {
         setLoading(false);
-        setRefresh(false);
       })
       .catch((e) => Alert.alert("데이터를 불러올 수 없습니다."));
   }, []);
 
-  const renderColorPalettes = useCallback((index) => {
+  const renderColorPalettes = (index: number) => {
     return (
       <View
         key={index}
@@ -238,7 +243,7 @@ export default function BelongToGroups() {
         })}
       </View>
     );
-  }, []);
+  };
 
   return (
     <SafeAreaView style={[styles.container]}>
