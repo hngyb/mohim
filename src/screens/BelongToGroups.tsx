@@ -20,7 +20,6 @@ export default function BelongToGroups() {
     fellowship?: Array<any>;
   }
   const [loading, setLoading] = useState(false);
-  const [render, setRender] = useState(false);
   const [isColorPalettesModalVisible, setColorPalettesModalVisible] =
     useState(false);
   const [selectedColor, setSelectedColor] = useState("");
@@ -37,9 +36,15 @@ export default function BelongToGroups() {
   const { email } = store.getState().login.loggedUser;
   const navigation = useNavigation();
   const goBack = useCallback(() => navigation.navigate("MyPage"), []);
-  const toggleColorPalettesModal = useCallback(() => {
-    setColorPalettesModalVisible(!isColorPalettesModalVisible);
-  }, [isColorPalettesModalVisible]);
+  const toggleColorPalettesModal = useCallback(
+    (item) => {
+      setSelectedColor(item.item.color);
+      setColorPalettesModalVisible(!isColorPalettesModalVisible);
+      // api post
+      // realm 수정
+    },
+    [isColorPalettesModalVisible]
+  );
 
   const renderItem = useCallback((item) => {
     return (
@@ -52,7 +57,11 @@ export default function BelongToGroups() {
                 alignItems: "center",
               }}
             >
-              <TouchableView onPress={toggleColorPalettesModal}>
+              <TouchableView
+                onPress={() => {
+                  toggleColorPalettesModal(item);
+                }}
+              >
                 <Avatar.Text
                   label={item.item.name[0]}
                   size={50}
@@ -201,11 +210,6 @@ export default function BelongToGroups() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      setRender(true);
-    }, 1500);
-  });
-  useEffect(() => {
     setLoading(true);
     getBelongToGroups()
       .then((belongTos) => {
@@ -229,6 +233,7 @@ export default function BelongToGroups() {
         {S.colorPalettes.slice(index * 5, index * 5 + 5).map((color) => {
           return (
             <TouchableView
+              onPress={() => setSelectedColor(color)}
               key={color}
               style={[
                 styles.colorCircle,
@@ -236,6 +241,9 @@ export default function BelongToGroups() {
                   backgroundColor: color,
                   width: parentWidth * 0.15,
                   height: parentWidth * 0.15,
+                  borderWidth: 5,
+                  borderColor:
+                    color == selectedColor ? S.colors.primary : color,
                 },
               ]}
             />
@@ -484,7 +492,9 @@ export default function BelongToGroups() {
             }}
           >
             <TouchableView
-              onPress={toggleColorPalettesModal}
+              onPress={() =>
+                setColorPalettesModalVisible(!isColorPalettesModalVisible)
+              }
               style={{
                 alignSelf: "center",
                 flex: 1,
