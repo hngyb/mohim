@@ -110,14 +110,7 @@ export default function RequestAuthorization() {
               {
                 groupId: ids.churchGroupId.data.id,
                 userId: email,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const belongToChurch = realm.create(
-              "BelongTos",
-              {
-                groupId: ids.churchGroupId.data.id,
-                userId: email,
+                isBelongTo: true,
               },
               Realm.UpdateMode.Modified
             );
@@ -138,14 +131,7 @@ export default function RequestAuthorization() {
               {
                 groupId: ids.districtGroupId.data.id,
                 userId: email,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const belongToDistrict = realm.create(
-              "BelongTos",
-              {
-                groupId: ids.districtGroupId.data.id,
-                userId: email,
+                isBelongTo: true,
               },
               Realm.UpdateMode.Modified
             );
@@ -166,14 +152,7 @@ export default function RequestAuthorization() {
               {
                 groupId: ids.groupGroupId.data.id,
                 userId: email,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const belongToGroup = realm.create(
-              "BelongTos",
-              {
-                groupId: ids.groupGroupId.data.id,
-                userId: email,
+                isBelongTo: true,
               },
               Realm.UpdateMode.Modified
             );
@@ -194,16 +173,8 @@ export default function RequestAuthorization() {
                 "Follows",
                 {
                   groupId: serviceGroup.id,
-                  color: randomColor(S.colorPalettes),
                   userId: email,
-                },
-                Realm.UpdateMode.Modified
-              );
-              realm.create(
-                "BelongTos",
-                {
-                  groupId: serviceGroup.id,
-                  userId: email,
+                  isBelongTo: true,
                 },
                 Realm.UpdateMode.Modified
               );

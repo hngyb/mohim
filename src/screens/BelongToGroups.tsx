@@ -38,7 +38,6 @@ export default function BelongToGroups() {
   const goBack = useCallback(() => navigation.navigate("MyPage"), []);
   const toggleColorPalettesModal = useCallback(
     (item) => {
-      console.log(item.item.color);
       setSelectedColor(item.item.color);
       setColorPalettesModalVisible(!isColorPalettesModalVisible);
       // api post
@@ -132,57 +131,70 @@ export default function BelongToGroups() {
     const belongToFellowship: any = [];
 
     realm
-      .objects("BelongTos")
-      .filtered(`deletedAt == null and userId == "${email}"`)
+      .objects("Follows")
+      .filtered(
+        `deletedAt == null and userId == "${email}" and isBelongTo == true`
+      )
       .forEach(async (group: any) => {
         const groupInfo: any = await realm
           .objects("Groups")
           .filtered(`category == "church" and id == ${group.groupId}`)
           .forEach((church: any) => {
+            church.color = group.color;
             belongToChurch.push(church);
           });
       });
     realm
-      .objects("BelongTos")
-      .filtered(`deletedAt == null and userId == "${email}"`)
+      .objects("Follows")
+      .filtered(
+        `deletedAt == null and userId == "${email}" and isBelongTo == true`
+      )
       .forEach(async (group: any) => {
         const groupInfo: any = await realm
           .objects("Groups")
           .filtered(`category == "district" and id == ${group.groupId}`)
           .forEach((district: any) => {
+            district.color = group.color;
             belongToDistrict.push(district);
           });
       });
     realm
-      .objects("BelongTos")
-      .filtered(`deletedAt == null and userId == "${email}"`)
+      .objects("Follows")
+      .filtered(
+        `deletedAt == null and userId == "${email}" and isBelongTo == true`
+      )
       .forEach(async (group: any) => {
         const groupInfo: any = await realm
           .objects("Groups")
           .filtered(`category == "group" and id == ${group.groupId}`)
-          .forEach((group: any) => {
-            belongToGroup.push(group);
+          .forEach((_group: any) => {
+            _group.color = group.color;
+            belongToGroup.push(_group);
           });
       });
     realm
-      .objects("BelongTos")
-      .filtered(`deletedAt == null and userId == "${email}"`)
+      .objects("Follows")
+      .filtered(
+        `deletedAt == null and userId == "${email}" and isBelongTo == true`
+      )
       .forEach(async (group: any) => {
         const groupInfo: any = await realm
           .objects("Groups")
           .filtered(`category == "service" and id == ${group.groupId}`)
           .forEach((service: any) => {
+            service.color = group.color;
             belongToService.push(service);
           });
       });
     realm
-      .objects("BelongTos")
+      .objects("Follows")
       .filtered(`deletedAt == null and userId == "${email}"`)
       .forEach(async (group: any) => {
         const groupInfo: any = await realm
           .objects("Groups")
           .filtered(`category == "fellowship" and id == ${group.groupId}`)
           .forEach((fellowship: any) => {
+            fellowship.color = group.color;
             belongToFellowship.push(fellowship);
           });
       });

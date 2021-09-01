@@ -141,26 +141,6 @@ export default function Home() {
         if (isAuthorized.data.isAuthorized === true) {
           // isAuthorized 상태 저장
           dispatch(I.setIsAuthorized(isAuthorized.data.isAuthorized));
-          // belongTo 서버 동기화
-          const belongToGroups = await axios.get("/api/belong-tos/", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-          const belongToGroupsArray = belongToGroups.data;
-          belongToGroupsArray.forEach((data: any) => {
-            realm.write(() => {
-              const belongToGroup = realm.create(
-                "BelongTos",
-                {
-                  groupId: data.GroupId,
-                  userId: email,
-                  createdAt: data.createdAt,
-                  updatedAt: data.updatedAt,
-                  deletedAt: data.deletedAt,
-                },
-                Realm.UpdateMode.Modified
-              );
-            });
-          });
 
           // follow 서버 동기화
           const followGroups = await axios.get("/api/follows/", {
@@ -175,6 +155,7 @@ export default function Home() {
                   groupId: data.GroupId,
                   userId: email,
                   color: data.color,
+                  isBelongTo: data.isBelongTo,
                   createdAt: data.createdAt,
                   updatedAt: data.updatedAt,
                   deletedAt: data.deletedAt,
@@ -247,7 +228,7 @@ export default function Home() {
             email
           );
           let latestUpdatedDate = null;
-          updatedDate == null
+          updatedDate != null
             ? (latestUpdatedDate = updatedDate.latestDate)
             : null;
           return { latestUpdatedDate, accessToken };
