@@ -38,6 +38,7 @@ export default function BelongToGroups() {
   const goBack = useCallback(() => navigation.navigate("MyPage"), []);
   const toggleColorPalettesModal = useCallback(
     (item) => {
+      console.log(item.item.color);
       setSelectedColor(item.item.color);
       setColorPalettesModalVisible(!isColorPalettesModalVisible);
       // api post

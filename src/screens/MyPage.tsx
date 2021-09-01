@@ -35,12 +35,10 @@ export default function MyPage() {
   const logout = useCallback(() => {
     dispatch(L.logoutAction); // logout 확인 필요
     dispatch(A.setJWT("", ""));
-    dispatch(D.setUpdatedDate(""));
     dispatch(I.setIsAuthorized(false));
     U.removeStorage(L.loggedUserKey);
     U.removeStorage("accessJWT");
     U.removeStorage("refreshJWT");
-    U.removeStorage("latestUpdatedDate");
     navigation.navigate("Auth");
   }, []);
 

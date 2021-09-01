@@ -102,7 +102,6 @@ export default function RequestAuthorization() {
                 church: church,
                 isPublic: true,
                 category: ids.churchGroupId.data.category,
-                color: randomColor(S.colorPalettes),
               },
               Realm.UpdateMode.Modified
             );
@@ -131,7 +130,6 @@ export default function RequestAuthorization() {
                 church: church,
                 isPublic: true,
                 category: ids.districtGroupId.data.category,
-                color: randomColor(S.colorPalettes),
               },
               Realm.UpdateMode.Modified
             );
@@ -160,7 +158,6 @@ export default function RequestAuthorization() {
                 church: church,
                 isPublic: true,
                 category: ids.groupGroupId.data.category,
-                color: randomColor(S.colorPalettes),
               },
               Realm.UpdateMode.Modified
             );
@@ -190,7 +187,6 @@ export default function RequestAuthorization() {
                   church: serviceGroup.church,
                   isPublic: true,
                   category: serviceGroup.category,
-                  color: randomColor(S.colorPalettes),
                 },
                 Realm.UpdateMode.Modified
               );
@@ -198,6 +194,7 @@ export default function RequestAuthorization() {
                 "Follows",
                 {
                   groupId: serviceGroup.id,
+                  color: randomColor(S.colorPalettes),
                   userId: email,
                 },
                 Realm.UpdateMode.Modified

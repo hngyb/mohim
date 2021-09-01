@@ -78,7 +78,13 @@ export default function SetChurch() {
             }}
           >
             {churches.map((church) => {
-              return <Picker.Item label={church.name} value={church.name} />;
+              return (
+                <Picker.Item
+                  key={church}
+                  label={church.name}
+                  value={church.name}
+                />
+              );
             })}
           </Picker>
         </View>

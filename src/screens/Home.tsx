@@ -174,6 +174,7 @@ export default function Home() {
                 {
                   groupId: data.GroupId,
                   userId: email,
+                  color: data.color,
                   createdAt: data.createdAt,
                   updatedAt: data.updatedAt,
                   deletedAt: data.deletedAt,
@@ -198,7 +199,7 @@ export default function Home() {
             const toBeUpdatedData = response.data;
             toBeUpdatedData.forEach((data: any) => {
               const groupInfo: any = realm.objectForPrimaryKey(
-                "Groups",
+                "Follows",
                 data.GroupId
               );
               const groupColor = groupInfo.color;
@@ -225,20 +226,36 @@ export default function Home() {
               });
             });
           });
-          await U.writeToStorage("latestUpdatedDate", renewUpdatedDate);
+          realm.write(() => {
+            const followGroup = realm.create(
+              "LatestUpdatedDates",
+              {
+                userId: email,
+                latestDate: renewUpdatedDate,
+              },
+              Realm.UpdateMode.Modified
+            );
+          });
           dispatch(L.setUpdatedDate(renewUpdatedDate));
         }
       }
       // 로컬 DB 와 서버 DB 동기화
-      U.readFromStorage("accessJWT").then((accessToken) => {
-        U.readFromStorage("latestUpdatedDate")
-          .then((value) => {
-            const latestUpdatedDate = value.length === 0 ? null : value;
-            const renewUpdatedDate = moment().format("YYYY-MM-DD");
-            getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate);
-          })
-          .catch((e) => console.log(e));
-      });
+      U.readFromStorage("accessJWT")
+        .then((accessToken) => {
+          const updatedDate: any = realm.objectForPrimaryKey(
+            "LatestUpdatedDates",
+            email
+          );
+          let latestUpdatedDate = null;
+          updatedDate == null
+            ? (latestUpdatedDate = updatedDate.latestDate)
+            : null;
+          return { latestUpdatedDate, accessToken };
+        })
+        .then(({ latestUpdatedDate, accessToken }) => {
+          const renewUpdatedDate = moment().format("YYYY-MM-DD");
+          getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate);
+        });
 
       // 캘린더 마킹
       const toBeMarkedDates = realm
