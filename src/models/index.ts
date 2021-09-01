@@ -1,6 +1,5 @@
 import Realm from "realm";
 import {
-  BelongToSchema,
   EventSchema,
   FollowSchema,
   GroupSchema,
@@ -8,11 +7,5 @@ import {
 } from "./schema";
 
 export default new Realm({
-  schema: [
-    BelongToSchema,
-    EventSchema,
-    FollowSchema,
-    GroupSchema,
-    LatestUpdatedDateSchema,
-  ],
+  schema: [EventSchema, FollowSchema, GroupSchema, LatestUpdatedDateSchema],
 });

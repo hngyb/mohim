@@ -17,7 +17,6 @@ import {
   Agenda,
 } from "../components";
 import * as U from "../utils";
-import * as L from "../store/latestUpdate";
 import * as I from "../store/isAuthorized";
 import * as S from "./Styles";
 import moment from "moment";

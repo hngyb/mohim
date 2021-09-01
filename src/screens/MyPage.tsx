@@ -8,7 +8,6 @@ import { useDispatch, useStore } from "react-redux";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
 import * as L from "../store/login";
-import * as D from "../store/latestUpdate";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import * as I from "../store/isAuthorized";
