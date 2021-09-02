@@ -83,7 +83,40 @@ export default function MyPage() {
                 성도 인증하기
               </Text>
             </TouchableView>
-            <View style={{ flex: 3 }}></View>
+            <View style={{ flex: 2 }}></View>
+            <View style={{ flex: 1 }}>
+              <TouchableView
+                style={[
+                  S.buttonStyles.longButton,
+                  {
+                    backgroundColor: S.colors.primary,
+                    flex: 1,
+                  },
+                ]}
+                onPress={() => {
+                  Alert.alert("로그아웃하시겠습니까?", "", [
+                    {
+                      text: "아니요",
+                    },
+                    {
+                      text: "네",
+                      onPress: logout,
+                    },
+                  ]);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.bigText,
+                    {
+                      color: "white",
+                    },
+                  ]}
+                >
+                  로그아웃
+                </Text>
+              </TouchableView>
+            </View>
           </View>
         </View>
       )}

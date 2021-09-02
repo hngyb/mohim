@@ -11,7 +11,6 @@ export const EventSchema = {
     location: "string?",
     notice: "string?",
     memo: "string?",
-    color: { type: "string", default: "lightgrey" },
     createdAt: { type: "date", default: Date() },
     updatedAt: { type: "date", default: Date() },
     deletedAt: { type: "date?" },

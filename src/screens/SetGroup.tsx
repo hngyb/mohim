@@ -1,16 +1,17 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
 import { Picker } from "@react-native-picker/picker";
 import * as S from "./Styles";
-import { Colors } from "react-native-paper";
-import Color from "color";
+import * as U from "../utils";
+import * as A from "../store/asyncStorage";
 import * as O from "../store/onBoarding";
 import { useDispatch, useStore } from "react-redux";
+import axios from "axios";
 
 export default function SetGroup() {
   const store = useStore();
@@ -19,6 +20,9 @@ export default function SetGroup() {
     store.getState().onBoarding;
   const [selectedGroup, setSelectedGroup] = useState<string>(group);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
+  const { accessJWT } = store.getState().asyncStorage;
+  const [groups, setGroups] = useState<Array<any>>([]);
+  const [requestAgain, setRequestAgain] = useState<boolean>(false);
   const navigation = useNavigation();
   const goBack = useCallback(
     () => navigation.canGoBack() && navigation.goBack(),
@@ -27,6 +31,44 @@ export default function SetGroup() {
   const goNext = useCallback(() => {
     navigation.navigate("SetService");
   }, []);
+
+  useEffect(() => {
+    const response = axios
+      .get("/api/groups/group-list", {
+        params: {
+          church: church,
+        },
+        headers: { Authorization: `Bearer ${accessJWT}` },
+      })
+      .then((response) => {
+        setGroups(response.data);
+        setRequestAgain(false);
+      })
+      .catch((e) => {
+        const errorStatus = e.response.status;
+        if (errorStatus === 401) {
+          // accessToken 만료
+          U.readFromStorage("refreshJWT").then((refreshToken: any) => {
+            // accessToken 재발급
+            axios
+              .get("/api/users/refresh-access", {
+                headers: { Authorization: `Bearer ${refreshToken}` },
+              })
+              .then((response) => {
+                const renewedAccessToken = response.data.accessToken;
+                U.writeToStorage("accessJWT", renewedAccessToken);
+                dispatch(A.setJWT(renewedAccessToken, refreshToken));
+              })
+              .then(() => {
+                // 재요청
+                setRequestAgain(true);
+              });
+          });
+        } else {
+          Alert.alert("비정상적인 접근입니다");
+        }
+      });
+  }, [requestAgain]);
 
   useEffect(() => {
     selectedGroup === "" ? setButtonDisabled(true) : setButtonDisabled(false);
@@ -76,14 +118,15 @@ export default function SetGroup() {
               );
             }}
           >
-            <Picker.Item label="청년회" value="청년회" />
-            <Picker.Item label="봉사회" value="봉사회" />
-            <Picker.Item label="어머니회" value="어머니회" />
-            <Picker.Item label="은빛장년회" value="은빛장년회" />
-            <Picker.Item label="교회학교(유)" value="교회학교(유)" />
-            <Picker.Item label="교회학교(초)" value="교회학교(초)" />
-            <Picker.Item label="교회학교(중)" value="교회학교(중)" />
-            <Picker.Item label="교회학교(고)" value="교회학교(고)" />
+            {groups.map((group) => {
+              return (
+                <Picker.Item
+                  key={group}
+                  label={group.name}
+                  value={group.name}
+                />
+              );
+            })}
           </Picker>
         </View>
       </View>

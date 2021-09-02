@@ -25,6 +25,7 @@ import Realm from "realm";
 import axios from "axios";
 import { useDispatch, useStore } from "react-redux";
 import { ActivityIndicator } from "react-native-paper";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function Home() {
   LogBox.ignoreLogs([
@@ -39,6 +40,10 @@ export default function Home() {
   const [pastSelectedDate, setPastSelectedDate] = useState<string>();
   const [agendaData, setAgendaData] = useState<Array<any>>([]);
   const dispatch = useDispatch();
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    setRefresh(true);
+  }, [isFocused]);
 
   const onDayPress = useCallback(
     (day: dayType) => {
@@ -79,7 +84,10 @@ export default function Home() {
       for (let i = 0; i < arr.length; ++i) {
         const objectKey = arr[i].date;
         const groupId = arr[i].groupId.toString();
-        const color = arr[i].color;
+        const groupInfo: any = realm
+          .objects("Follows")
+          .filtered(`userId == "${email}" and groupId == ${arr[i].groupId}`);
+        const color = groupInfo[0].color;
         const selected = objectKey === today ? true : false;
         objectKey in objects
           ? (objects[objectKey] = {
@@ -109,6 +117,10 @@ export default function Home() {
         arr[i].groupId
       );
       const groupName = groupInfo.name;
+      const groupColor: any = realm
+        .objects("Follows")
+        .filtered(`userId == "${email}" and groupId == ${arr[i].groupId}`);
+      const color = groupColor[0].color;
       object.title = arr[i].title;
       object.data = [
         {
@@ -118,7 +130,7 @@ export default function Home() {
           end: arr[i].endTime?.slice(0, 5),
           notice: arr[i].notice,
           memo: arr[i].memo,
-          color: arr[i].color,
+          color: color,
         },
       ];
       agenda.push(object);
@@ -207,7 +219,7 @@ export default function Home() {
             });
           });
           realm.write(() => {
-            const followGroup = realm.create(
+            realm.create(
               "LatestUpdatedDates",
               {
                 userId: email,
@@ -216,7 +228,6 @@ export default function Home() {
               Realm.UpdateMode.Modified
             );
           });
-          dispatch(L.setUpdatedDate(renewUpdatedDate));
         }
       }
       // 로컬 DB 와 서버 DB 동기화
@@ -301,6 +312,7 @@ export default function Home() {
               <Text style={[styles.agendaText]}>일정</Text>
             </View>
             <SectionList
+              disableVirtualization={false}
               stickySectionHeadersEnabled={false}
               sections={agendaData}
               renderItem={({ item, section }) => (

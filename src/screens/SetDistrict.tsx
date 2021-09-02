@@ -1,21 +1,28 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationHeader, TouchableView } from "../components";
 import { Picker } from "@react-native-picker/picker";
 import * as S from "./Styles";
+import * as U from "../utils";
+import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
 import * as O from "../store/onBoarding";
+import axios from "axios";
 
 export default function SetDistrict() {
   const store = useStore();
   const dispatch = useDispatch();
   const { church, sex, district, group, services, inviteCode } =
     store.getState().onBoarding;
+  const { accessJWT } = store.getState().asyncStorage;
   const [selectedDistrict, setSelectedDistrict] = useState<string>(district);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
+  const [districts, setDistricts] = useState<Array<any>>([]);
+  const [requestAgain, setRequestAgain] = useState<boolean>(false);
+
   const navigation = useNavigation();
   const goBack = useCallback(
     () => navigation.canGoBack() && navigation.goBack(),
@@ -24,6 +31,44 @@ export default function SetDistrict() {
   const goNext = useCallback(() => {
     navigation.navigate("SetGroup");
   }, []);
+
+  useEffect(() => {
+    const response = axios
+      .get("/api/groups/district-list", {
+        params: {
+          church: church,
+        },
+        headers: { Authorization: `Bearer ${accessJWT}` },
+      })
+      .then((response) => {
+        setDistricts(response.data);
+        setRequestAgain(false);
+      })
+      .catch((e) => {
+        const errorStatus = e.response.status;
+        if (errorStatus === 401) {
+          // accessToken 만료
+          U.readFromStorage("refreshJWT").then((refreshToken: any) => {
+            // accessToken 재발급
+            axios
+              .get("/api/users/refresh-access", {
+                headers: { Authorization: `Bearer ${refreshToken}` },
+              })
+              .then((response) => {
+                const renewedAccessToken = response.data.accessToken;
+                U.writeToStorage("accessJWT", renewedAccessToken);
+                dispatch(A.setJWT(renewedAccessToken, refreshToken));
+              })
+              .then(() => {
+                // 재요청
+                setRequestAgain(true);
+              });
+          });
+        } else {
+          Alert.alert("비정상적인 접근입니다");
+        }
+      });
+  }, [requestAgain]);
 
   useEffect(() => {
     selectedDistrict === ""
@@ -75,24 +120,15 @@ export default function SetDistrict() {
               );
             }}
           >
-            <Picker.Item label="11구역" value="11구역" />
-            <Picker.Item label="12구역" value="12구역" />
-            <Picker.Item label="13구역" value="13구역" />
-            <Picker.Item label="21구역" value="21구역" />
-            <Picker.Item label="22구역" value="22구역" />
-            <Picker.Item label="23구역" value="23구역" />
-            <Picker.Item label="31구역" value="31구역" />
-            <Picker.Item label="32구역" value="32구역" />
-            <Picker.Item label="33구역" value="33구역" />
-            <Picker.Item label="41구역" value="41구역" />
-            <Picker.Item label="42구역" value="42구역" />
-            <Picker.Item label="43구역" value="43구역" />
-            <Picker.Item label="51구역" value="51구역" />
-            <Picker.Item label="52구역" value="52구역" />
-            <Picker.Item label="53구역" value="53구역" />
-            <Picker.Item label="61구역" value="61구역" />
-            <Picker.Item label="62구역" value="62구역" />
-            <Picker.Item label="63구역" value="63구역" />
+            {districts.map((district) => {
+              return (
+                <Picker.Item
+                  key={district}
+                  label={district.name}
+                  value={district.name}
+                />
+              );
+            })}
           </Picker>
         </View>
       </View>

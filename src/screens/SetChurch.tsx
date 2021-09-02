@@ -1,11 +1,13 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
+import * as U from "../utils";
+import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
 import * as O from "../store/onBoarding";
 import { Picker } from "@react-native-picker/picker";
@@ -21,10 +23,13 @@ export default function SetChurch() {
   const { accessJWT } = store.getState().asyncStorage;
   const [selectedChurch, setSelectedChurch] = useState<string>(church);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
+  const [requestAgain, setRequestAgain] = useState<boolean>(false);
+
   const goNext = useCallback(() => {
     navigation.navigate("SetSex");
   }, []);
   const [churches, setChurches] = useState<Array<any>>([]);
+
   useEffect(() => {
     const response = axios
       .get("/api/groups/church-list", {
@@ -32,9 +37,35 @@ export default function SetChurch() {
       })
       .then((response) => {
         setChurches(response.data);
+        setRequestAgain(false);
+      })
+      .catch((e) => {
+        const errorStatus = e.response.status;
+        if (errorStatus === 401) {
+          // accessToken 만료
+          U.readFromStorage("refreshJWT").then((refreshToken: any) => {
+            // accessToken 재발급
+            axios
+              .get("/api/users/refresh-access", {
+                headers: { Authorization: `Bearer ${refreshToken}` },
+              })
+              .then((response) => {
+                const renewedAccessToken = response.data.accessToken;
+                U.writeToStorage("accessJWT", renewedAccessToken);
+                dispatch(A.setJWT(renewedAccessToken, refreshToken));
+              })
+              .then(() => {
+                // 재요청
+                setRequestAgain(true);
+              });
+          });
+        } else {
+          Alert.alert("비정상적인 접근입니다");
+        }
       });
     SplashScreen.hide();
-  }, []);
+  }, [requestAgain]);
+
   useEffect(() => {
     selectedChurch === "" ? setButtonDisabled(true) : setButtonDisabled(false);
   }, [selectedChurch]);
