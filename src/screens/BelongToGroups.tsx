@@ -195,12 +195,33 @@ export default function BelongToGroups() {
           .map((group: any) => {
             const groupId = group.id;
             realm.write(() => {
+              // hard delete
               const object = realm
                 .objects("Follows")
                 .filtered(
                   `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
                 );
               realm.delete(object);
+              // event 지우기 (sofe delete)
+              const events = realm
+                .objects("Events")
+                .filtered(
+                  `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
+                );
+              const idArray: any = [];
+              events.forEach((item: any) => {
+                idArray.push(item.id);
+              });
+              idArray.map((id: number) => {
+                realm.create(
+                  "Events",
+                  {
+                    id: id,
+                    deletedAt: Date(),
+                  },
+                  Realm.UpdateMode.Modified
+                );
+              });
             });
             // api post
             axios.post(
@@ -246,6 +267,19 @@ export default function BelongToGroups() {
                 },
                 Realm.UpdateMode.Modified
               );
+              const events = realm
+                .objects("Events")
+                .filtered(`userId == "${email}" and groupId == "${groupId}"`)
+                .map((event: any) => {
+                  realm.create(
+                    "Events",
+                    {
+                      id: event.id,
+                      deletedAt: null,
+                    },
+                    Realm.UpdateMode.Modified
+                  );
+                });
             });
             // api post
             axios
@@ -309,6 +343,25 @@ export default function BelongToGroups() {
                 `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
               );
             realm.delete(object);
+            const events = realm
+              .objects("Events")
+              .filtered(
+                `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
+              );
+            const idArray: any = [];
+            events.forEach((item: any) => {
+              idArray.push(item.id);
+            });
+            idArray.map((id: number) => {
+              realm.create(
+                "Events",
+                {
+                  id: id,
+                  deletedAt: Date(),
+                },
+                Realm.UpdateMode.Modified
+              );
+            });
           });
           // api post
           axios.post(
@@ -352,6 +405,19 @@ export default function BelongToGroups() {
               },
               Realm.UpdateMode.Modified
             );
+            const events = realm
+              .objects("Events")
+              .filtered(`userId == "${email}" and groupId == "${groupId}"`)
+              .map((event: any) => {
+                realm.create(
+                  "Events",
+                  {
+                    id: event.id,
+                    deletedAt: null,
+                  },
+                  Realm.UpdateMode.Modified
+                );
+              });
           });
           // api post
           axios

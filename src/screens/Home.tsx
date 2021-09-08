@@ -66,7 +66,9 @@ export default function Home() {
       // 아젠다 업데이트
       const agenda = realm
         .objects("Events")
-        .filtered(`date == "${selectedDate}"`)
+        .filtered(
+          `date == "${selectedDate}" and deletedAt == null and userId = "${email}"`
+        )
         .sorted("startTime");
       setAgendaData(toAgendaType(agenda));
     },
@@ -181,6 +183,20 @@ export default function Home() {
             .objects("Follows")
             .filtered(`deletedAt == null and userId == "${email}"`);
           await followGroupIds.forEach(async (groupId: any) => {
+            // 기존에 soft deleted event 복구
+            realm.write(() => {
+              const events = realm
+                .objects("Events")
+                .filtered(
+                  `deletedAt != null and userId == "${email}" and groupId == "${groupId.groupId}"`
+                )
+                .forEach((event: any) => {
+                  realm.create("Events", {
+                    id: event.id,
+                    deletedAt: null,
+                  });
+                });
+            });
             const response = await axios.get("/api/events/", {
               params: {
                 groupId: groupId.groupId,
@@ -245,13 +261,13 @@ export default function Home() {
         })
         .then(({ latestUpdatedDate, accessToken }) => {
           const renewUpdatedDate = moment().format("YYYY-MM-DD");
-          getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate);
+          getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate); // latestUpdateDate 정책 수정 필요, 일단 latestUpdatedDate => null
         });
 
       // 캘린더 마킹
       const toBeMarkedDates = realm
         .objects("Events")
-        .filtered(`deletedAt == null && userId = "${email}"`);
+        .filtered(`deletedAt == null and userId = "${email}"`);
       const toBeMarkedDatesObjects = toSetMarkedDatesObjects(toBeMarkedDates);
       setMarkedDates(toBeMarkedDatesObjects);
 
@@ -265,12 +281,12 @@ export default function Home() {
       setAgendaData(toAgendaType(todayAgenda));
 
       // 서버에서 삭제된 이벤트 지우기
-      realm.write(() => {
-        const deletedEvents = realm
-          .objects("Events")
-          .filtered(`deletedAt != null && userId == "${email}"`);
-        realm.delete(deletedEvents);
-      });
+      // realm.write(() => {
+      //   const deletedEvents = realm
+      //     .objects("Events")
+      //     .filtered(`deletedAt != null && userId == "${email}"`);
+      //   realm.delete(deletedEvents);
+      // });
       setRefresh(false);
     }
   }, [refresh]); // 새로고침 dependancy로 넣기 (추가)
