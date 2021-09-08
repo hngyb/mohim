@@ -14,7 +14,7 @@ import * as A from "../store/asyncStorage";
 import Modal from "react-native-modal";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
-import SetDistrict from "./SetDistrict";
+import DropDownPicker from "react-native-dropdown-picker";
 
 export default function BelongToGroups() {
   interface belongToType {
@@ -38,14 +38,20 @@ export default function BelongToGroups() {
   const [data, setData] = useState<belongToType>({});
 
   const [church, setChurch] = useState<string>("");
+  const [selectedChurch, setSelectedChurch] = useState<string>("");
   const [churches, setChurches] = useState<Array<any>>([]);
   const [district, setDistrict] = useState<string>("");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [districts, setDistricts] = useState<Array<any>>([]);
   const [group, setGroup] = useState<string>("");
+  const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [groups, setGroups] = useState<Array<any>>([]);
-  const [service, setService] = useState<Array<any>>();
+  const [service, setService] = useState<Array<any>>([]);
+  const [selectedSerivice, setSelectedService] = useState<Array<any>>([]);
+  const [open, setOpen] = useState(false);
   const [services, setServices] = useState<Array<any>>([]);
   const [fellowship, setFellowship] = useState<Array<any>>();
+  const [selectedFellowship, setSelectedFellowship] = useState<Array<any>>();
   const [fellowships, setFellowships] = useState<Array<any>>([]);
   const [currentGroup, setCurrentGroup] = useState<any>();
   const [parentWidth, setParentWidth] = useState(0);
@@ -75,6 +81,16 @@ export default function BelongToGroups() {
     },
     [isReviseModalVisible]
   );
+
+  const closeReviseModal = () => {
+    setSelectedChurch(church);
+    setSelectedDistrict(district);
+    setSelectedGroup(group);
+    setSelectedService(service);
+    setSelectedFellowship(fellowship);
+    setReviseModalVisible(!setReviseModalVisible);
+  };
+
   useEffect(() => {
     async function getBelongToChurch() {
       let churchName;
@@ -167,11 +183,212 @@ export default function BelongToGroups() {
       });
   }, [requestAgain]);
 
-  const reviseBelongTo = useCallback(() => {
-    // groupId, Email => api post(follows) (바뀌기전 groupId, 바꿀 groupId)
-    // realm 수정 (Follows)
+  const reviseBelongTo = () => {
+    if (currentGroup == "봉사") {
+      // 이전 그룹 삭제
+      service.map((currentService) => {
+        const serviceToBeDeleted = realm
+          .objects("Groups")
+          .filtered(
+            `deletedAt == null and userId == "${email}" and name == "${currentService}" and church == "${church}"`
+          )
+          .map((group: any) => {
+            const groupId = group.id;
+            realm.write(() => {
+              const object = realm
+                .objects("Follows")
+                .filtered(
+                  `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
+                );
+              realm.delete(object);
+            });
+            // api post
+            axios.post(
+              "/api/follows/delete",
+              {
+                groupId: groupId,
+              },
+              { headers: { Authorization: `Bearer ${accessJWT}` } }
+            );
+          });
+      });
+      // 새로운 그룹 추가
+      selectedSerivice.map((currentService) => {
+        axios
+          .get("/api/groups", {
+            params: {
+              name: currentService,
+              church: church,
+            },
+            headers: { Authorization: `Bearer ${accessJWT}` },
+          })
+          .then((response) => {
+            const groupId = response.data.id;
+            realm.write(() => {
+              realm.create(
+                "Groups",
+                {
+                  id: groupId,
+                  userId: email,
+                  name: response.data.name,
+                  church: church,
+                  isPublic: true,
+                  category: response.data.category,
+                },
+                Realm.UpdateMode.Modified
+              );
+              const newGroup = realm.create(
+                "Follows",
+                {
+                  groupId: groupId,
+                  userId: email,
+                  isBelongTo: true,
+                },
+                Realm.UpdateMode.Modified
+              );
+            });
+            // api post
+            axios
+              .post(
+                "/api/follows",
+                {
+                  groupId: groupId,
+                },
+                { headers: { Authorization: `Bearer ${accessJWT}` } }
+              )
+              .then((response) => {
+                // 색상 업데이트
+                const color = response.data.color;
+                realm.write(() => {
+                  realm.create(
+                    "Follows",
+                    {
+                      groupId: groupId,
+                      userId: email,
+                      isBelongTo: true,
+                      color: color,
+                    },
+                    Realm.UpdateMode.Modified
+                  );
+                });
+              })
+              .then(() => {
+                setRequestAgain(true);
+                const id = setTimeout(() => {
+                  setBelongToChanged(true);
+                }, 500);
+                return () => clearTimeout(id);
+              });
+          });
+      });
+    } else {
+      const groupToBeDeleted =
+        currentGroup == "교회"
+          ? church
+          : currentGroup == "구역"
+          ? district
+          : group;
+      const newGroup =
+        currentGroup == "교회"
+          ? selectedChurch
+          : currentGroup == "구역"
+          ? selectedDistrict
+          : selectedGroup;
+      // 이전 그룹 삭제
+      realm
+        .objects("Groups")
+        .filtered(
+          `deletedAt == null and userId == "${email}" and name == "${groupToBeDeleted}" and church == "${church}"`
+        )
+        .map((item: any) => {
+          const groupId = item.id;
+          realm.write(() => {
+            const object = realm
+              .objects("Follows")
+              .filtered(
+                `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
+              );
+            realm.delete(object);
+          });
+          // api post
+          axios.post(
+            "/api/follows/delete",
+            {
+              groupId: groupId,
+            },
+            { headers: { Authorization: `Bearer ${accessJWT}` } }
+          );
+        });
+      // 새로운 그룹 추가
+      axios
+        .get("/api/groups", {
+          params: {
+            name: newGroup,
+            church: church,
+          },
+          headers: { Authorization: `Bearer ${accessJWT}` },
+        })
+        .then((response) => {
+          const groupId = response.data.id;
+          realm.write(() => {
+            realm.create(
+              "Groups",
+              {
+                id: groupId,
+                userId: email,
+                name: response.data.name,
+                church: church,
+                isPublic: true,
+                category: response.data.category,
+              },
+              Realm.UpdateMode.Modified
+            );
+            const newGroup = realm.create(
+              "Follows",
+              {
+                groupId: groupId,
+                userId: email,
+                isBelongTo: true,
+              },
+              Realm.UpdateMode.Modified
+            );
+          });
+          // api post
+          axios
+            .post(
+              "/api/follows",
+              {
+                groupId: groupId,
+              },
+              { headers: { Authorization: `Bearer ${accessJWT}` } }
+            )
+            .then((response) => {
+              // 색상 업데이트
+              const color = response.data.color;
+              realm.write(() => {
+                realm.create(
+                  "Follows",
+                  {
+                    groupId: groupId,
+                    userId: email,
+                    isBelongTo: true,
+                    color: color,
+                  },
+                  Realm.UpdateMode.Modified
+                );
+              });
+            })
+            .then(() => {
+              setRequestAgain(true);
+              const id = setTimeout(() => {
+                setBelongToChanged(true);
+              }, 500);
+              return () => clearTimeout(id);
+            });
+        });
+    }
     setReviseModalVisible(!isReviseModalVisible);
-  }, []);
+  };
 
   const reviseModal = () => {
     return (
@@ -181,7 +398,7 @@ export default function BelongToGroups() {
           justifyContent: "flex-end",
         }}
         isVisible={isReviseModalVisible}
-        onSwipeComplete={() => setReviseModalVisible(!isReviseModalVisible)}
+        onSwipeComplete={closeReviseModal}
         swipeDirection="down"
       >
         <View
@@ -201,7 +418,7 @@ export default function BelongToGroups() {
             }}
           >
             <TouchableView
-              onPress={() => setReviseModalVisible(!isReviseModalVisible)}
+              onPress={closeReviseModal}
               style={{
                 alignSelf: "center",
                 flex: 1,
@@ -233,9 +450,9 @@ export default function BelongToGroups() {
                 itemStyle={{
                   fontFamily: S.fonts.medium,
                 }}
-                selectedValue={church}
+                selectedValue={selectedChurch}
                 onValueChange={(itemValue, itemIndex) => {
-                  setChurch(itemValue);
+                  setSelectedChurch(itemValue);
                 }}
               >
                 {churches.map((church) => {
@@ -258,9 +475,9 @@ export default function BelongToGroups() {
                 itemStyle={{
                   fontFamily: S.fonts.medium,
                 }}
-                selectedValue={district}
+                selectedValue={selectedDistrict}
                 onValueChange={(itemValue, itemIndex) => {
-                  setDistrict(itemValue);
+                  setSelectedDistrict(itemValue);
                 }}
               >
                 {districts.map((district) => {
@@ -283,9 +500,9 @@ export default function BelongToGroups() {
                 itemStyle={{
                   fontFamily: S.fonts.medium,
                 }}
-                selectedValue={group}
+                selectedValue={selectedGroup}
                 onValueChange={(itemValue, itemIndex) => {
-                  setGroup(itemValue);
+                  setSelectedGroup(itemValue);
                 }}
               >
                 {groups.map((group) => {
@@ -298,6 +515,33 @@ export default function BelongToGroups() {
                   );
                 })}
               </Picker>
+            )}
+            {currentGroup == "봉사" && (
+              <DropDownPicker
+                textStyle={{ fontFamily: S.fonts.medium }}
+                labelStyle={{
+                  fontFamily: S.fonts.medium,
+                }}
+                badgeTextStyle={{
+                  fontFamily: S.fonts.medium,
+                  color: "white",
+                }}
+                badgeColors={S.colors.primary}
+                maxHeight={140}
+                listMode="FLATLIST"
+                mode="BADGE"
+                showBadgeDot={false}
+                multiple={true}
+                min={0}
+                max={5}
+                open={open}
+                value={selectedSerivice}
+                items={services}
+                setOpen={setOpen}
+                setValue={setSelectedService}
+                setItems={setServices}
+                placeholder="모두 선택해주세요"
+              />
             )}
           </View>
           <View style={{ flex: 1, justifyContent: "center" }}>
@@ -511,11 +755,23 @@ export default function BelongToGroups() {
       service: belongToService,
       fellowship: belongToFellowship,
     };
+
     setChurch(belongToChurch[0].name);
+    setSelectedChurch(belongToChurch[0].name);
     setDistrict(belongToDistrict[0].name);
+    setSelectedDistrict(belongToDistrict[0].name);
     setGroup(belongToGroup[0].name);
-    setService(belongToService);
+    setSelectedGroup(belongToGroup[0].name);
+
+    const itemArray: any = [];
+    belongToService.map((service: any) => {
+      const item = service.name;
+      itemArray.push(item);
+    });
+    setService(itemArray);
+    setSelectedService(itemArray);
     setFellowship(belongToFellowship);
+    setSelectedFellowship(belongToFellowship);
     return belongTos;
   }, []);
 
