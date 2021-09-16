@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   LogBox,
+  Alert,
 } from "react-native";
 import SplashScreen from "react-native-splash-screen";
 import {
@@ -19,6 +20,7 @@ import {
 import * as U from "../utils";
 import * as I from "../store/isAuthorized";
 import * as S from "./Styles";
+import * as A from "../store/asyncStorage";
 import moment from "moment";
 import realm from "../models";
 import Realm from "realm";
@@ -34,6 +36,7 @@ export default function Home() {
   const store = useStore();
   const { email } = store.getState().login.loggedUser;
   const [refresh, setRefresh] = useState<boolean>(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [today, setToday] = useState<string>(moment().format("YYYY-MM-DD"));
   const [markedDates, setMarkedDates] = useState({});
@@ -148,12 +151,46 @@ export default function Home() {
         renewUpdatedDate: string
       ) {
         // authroization 체크, True일 때 진행
-        const isAuthorized = await axios.get("/api/users/is-authorized", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (isAuthorized.data.isAuthorized === true) {
+        await axios
+          .get("/api/users/is-authorized", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+          .then((response) => {
+            setIsAuthorized(response.data.isAuthorized);
+          })
+          .catch((e) => {
+            const errorStatus = e.response.status;
+            if (errorStatus === 401) {
+              // accessToken 만료
+              U.readFromStorage("refreshJWT").then((refreshToken: any) => {
+                // accessToken 재발급
+                axios
+                  .get("/api/users/refresh-access", {
+                    headers: { Authorization: `Bearer ${refreshToken}` },
+                  })
+                  .then((response) => {
+                    const renewedAccessToken = response.data.accessToken;
+                    U.writeToStorage("accessJWT", renewedAccessToken);
+                    dispatch(A.setJWT(renewedAccessToken, refreshToken));
+                  })
+                  .then(() => {
+                    // 재요청
+                    axios
+                      .get("/api/users/is-authorized", {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                      })
+                      .then((response) => {
+                        setIsAuthorized(response.data.isAuthorized);
+                      });
+                  });
+              });
+            } else {
+              Alert.alert("비정상적인 접근입니다");
+            }
+          });
+        if (isAuthorized === true) {
           // isAuthorized 상태 저장
-          dispatch(I.setIsAuthorized(isAuthorized.data.isAuthorized));
+          dispatch(I.setIsAuthorized(isAuthorized));
 
           // follow 서버 동기화
           const followGroups = await axios.get("/api/follows/", {
