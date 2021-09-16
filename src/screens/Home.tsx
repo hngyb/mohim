@@ -39,8 +39,8 @@ export default function Home() {
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [today, setToday] = useState<string>(moment().format("YYYY-MM-DD"));
-  const [markedDates, setMarkedDates] = useState({});
-  const [pastSelectedDate, setPastSelectedDate] = useState<string>();
+  const [markedDates, setMarkedDates] = useState<any>({});
+  const [pastSelectedDate, setPastSelectedDate] = useState<string>("");
   const [agendaData, setAgendaData] = useState<Array<any>>([]);
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
