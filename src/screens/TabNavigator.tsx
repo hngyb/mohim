@@ -55,7 +55,7 @@ export default function TabNavigator() {
       <Tab.Screen
         name="Search"
         component={Search}
-        options={{ tabBarLabel: "검색" }}
+        options={{ tabBarLabel: "그룹 검색" }}
       ></Tab.Screen>
       <Tab.Screen
         name="MyPage"
