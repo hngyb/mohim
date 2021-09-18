@@ -71,14 +71,17 @@ export type dayType = {
 export const CalendarView: FC<CalendarViewProps> = ({
   onDayPress,
   markedDates,
+  onVisibleMonthsChange,
 }) => {
   return (
     <CalendarList
       horizontal
+      onVisibleMonthsChange={onVisibleMonthsChange}
       pagingEnabled={true}
       markingType="multi-dot"
       onDayPress={onDayPress}
       markedDates={markedDates}
+      key={1}
       monthFormat={"yyyy년 MM월"}
       theme={{
         // calendar
