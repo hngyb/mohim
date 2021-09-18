@@ -22,7 +22,6 @@ import * as I from "../store/isAuthorized";
 import * as S from "./Styles";
 import * as A from "../store/asyncStorage";
 import moment from "moment";
-import realm from "../models";
 import Realm from "realm";
 import axios from "axios";
 import { useDispatch, useStore } from "react-redux";
@@ -35,6 +34,8 @@ export default function Home() {
   ]); // toSetMarkedDatesObjects 함수에서 objectKey 중복에 대한 경고 무시하기
   const store = useStore();
   const { email } = store.getState().login.loggedUser;
+  const { accessJWT } = store.getState().asyncStorage;
+  const [requestAgain, setRequestAgain] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<boolean>(true);
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,9 +45,25 @@ export default function Home() {
   const [agendaData, setAgendaData] = useState<Array<any>>([]);
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
+
   useEffect(() => {
     setRefresh(true);
   }, [isFocused]);
+
+  const updateToken = () => {
+    U.readFromStorage("refreshJWT").then((refreshToken: any) => {
+      // accessToken 재발급
+      axios
+        .get("/api/users/refresh-access", {
+          headers: { Authorization: `Bearer ${refreshToken}` },
+        })
+        .then((response) => {
+          const renewedAccessToken = response.data.accessToken;
+          U.writeToStorage("accessJWT", renewedAccessToken);
+          dispatch(A.setJWT(renewedAccessToken, refreshToken));
+        });
+    });
+  };
 
   const onDayPress = useCallback(
     (day: dayType) => {
@@ -144,68 +161,104 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (refresh === true) {
-      async function getDataFromServer(
-        accessToken: string,
-        latestUpdatedDate: string | null,
-        renewUpdatedDate: string
-      ) {
-        // authroization 체크, True일 때 진행
-        await axios
-          .get("/api/users/is-authorized", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          })
-          .then((response) => {
-            setIsAuthorized(response.data.isAuthorized);
-          })
-          .catch((e) => {
-            const errorStatus = e.response.status;
-            if (errorStatus === 401) {
-              // accessToken 만료
-              U.readFromStorage("refreshJWT").then((refreshToken: any) => {
-                // accessToken 재발급
-                axios
-                  .get("/api/users/refresh-access", {
-                    headers: { Authorization: `Bearer ${refreshToken}` },
-                  })
-                  .then((response) => {
-                    const renewedAccessToken = response.data.accessToken;
-                    U.writeToStorage("accessJWT", renewedAccessToken);
-                    dispatch(A.setJWT(renewedAccessToken, refreshToken));
-                  })
-                  .then(() => {
-                    // 재요청
-                    axios
-                      .get("/api/users/is-authorized", {
-                        headers: { Authorization: `Bearer ${accessToken}` },
-                      })
-                      .then((response) => {
-                        setIsAuthorized(response.data.isAuthorized);
-                      });
-                  });
-              });
-            } else {
-              Alert.alert("비정상적인 접근입니다");
-            }
-          });
-        if (isAuthorized === true) {
-          // isAuthorized 상태 저장
-          dispatch(I.setIsAuthorized(isAuthorized));
+    async function getDataFromServer(
+      accessToken: string,
+      latestUpdatedDate: string | null,
+      renewUpdatedDate: string
+    ) {
+      // authroization 체크, True일 때 진행
+      await axios
+        .get("/api/users/is-authorized", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        .then((response) => {
+          setIsAuthorized(response.data.isAuthorized);
+          setRequestAgain(false);
+        })
+        .catch((e) => {
+          const errorStatus = e.response.status;
+          if (errorStatus === 401) {
+            // accessToken 만료
+            updateToken();
+            setRequestAgain(true);
+          } else {
+            Alert.alert("비정상적인 접근입니다");
+          }
+        });
+      if (isAuthorized === true) {
+        // isAuthorized 상태 저장
+        dispatch(I.setIsAuthorized(isAuthorized));
 
-          // follow 서버 동기화
-          const followGroups = await axios.get("/api/follows/", {
+        // follow 서버 동기화
+        const followGroups = await axios.get("/api/follows/", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const followGroupsArray = followGroups.data;
+        followGroupsArray.forEach((data: any) => {
+          realm.write(() => {
+            const followGroup = realm.create(
+              "Follows",
+              {
+                groupId: data.GroupId,
+                userId: email,
+                color: data.color,
+                isBelongTo: data.isBelongTo,
+                createdAt: data.createdAt,
+                updatedAt: data.updatedAt,
+                deletedAt: data.deletedAt,
+              },
+              Realm.UpdateMode.Modified
+            );
+          });
+        });
+
+        // follow 그룹에 속한 이벤트 동기화
+        const followGroupIds = await realm
+          .objects("Follows")
+          .filtered(`deletedAt == null and userId == "${email}"`);
+        await followGroupIds.forEach(async (groupId: any) => {
+          // 기존에 soft deleted event 복구
+          realm.write(() => {
+            const events = realm
+              .objects("Events")
+              .filtered(
+                `deletedAt != null and userId == "${email}" and groupId == "${groupId.groupId}"`
+              )
+              .forEach((event: any) => {
+                realm.create("Events", {
+                  id: event.id,
+                  deletedAt: null,
+                });
+              });
+          });
+          const response = await axios.get("/api/events/", {
+            params: {
+              groupId: groupId.groupId,
+              date: latestUpdatedDate,
+            },
             headers: { Authorization: `Bearer ${accessToken}` },
           });
-          const followGroupsArray = followGroups.data;
-          followGroupsArray.forEach((data: any) => {
+          const toBeUpdatedData = response.data;
+          toBeUpdatedData.forEach((data: any) => {
+            const groupInfo: any = realm.objectForPrimaryKey(
+              "Follows",
+              data.GroupId
+            );
+            const groupColor = groupInfo.color;
             realm.write(() => {
-              const followGroup = realm.create(
-                "Follows",
+              const event = realm.create(
+                "Events",
                 {
-                  groupId: data.GroupId,
+                  id: data.id,
                   userId: email,
-                  color: data.color,
-                  isBelongTo: data.isBelongTo,
+                  groupId: data.GroupId,
+                  title: data.title,
+                  date: data.date.split("T")[0],
+                  startTime: data.startTime,
+                  endTime: data.endTime,
+                  location: data.location,
+                  notice: data.notice,
+                  color: groupColor,
                   createdAt: data.createdAt,
                   updatedAt: data.updatedAt,
                   deletedAt: data.deletedAt,
@@ -214,118 +267,52 @@ export default function Home() {
               );
             });
           });
-
-          // follow 그룹에 속한 이벤트 동기화
-          const followGroupIds = await realm
-            .objects("Follows")
-            .filtered(`deletedAt == null and userId == "${email}"`);
-          await followGroupIds.forEach(async (groupId: any) => {
-            // 기존에 soft deleted event 복구
-            realm.write(() => {
-              const events = realm
-                .objects("Events")
-                .filtered(
-                  `deletedAt != null and userId == "${email}" and groupId == "${groupId.groupId}"`
-                )
-                .forEach((event: any) => {
-                  realm.create("Events", {
-                    id: event.id,
-                    deletedAt: null,
-                  });
-                });
-            });
-            const response = await axios.get("/api/events/", {
-              params: {
-                groupId: groupId.groupId,
-                date: latestUpdatedDate,
-              },
-              headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            const toBeUpdatedData = response.data;
-            toBeUpdatedData.forEach((data: any) => {
-              const groupInfo: any = realm.objectForPrimaryKey(
-                "Follows",
-                data.GroupId
-              );
-              const groupColor = groupInfo.color;
-              realm.write(() => {
-                const event = realm.create(
-                  "Events",
-                  {
-                    id: data.id,
-                    userId: email,
-                    groupId: data.GroupId,
-                    title: data.title,
-                    date: data.date.split("T")[0],
-                    startTime: data.startTime,
-                    endTime: data.endTime,
-                    location: data.location,
-                    notice: data.notice,
-                    color: groupColor,
-                    createdAt: data.createdAt,
-                    updatedAt: data.updatedAt,
-                    deletedAt: data.deletedAt,
-                  },
-                  Realm.UpdateMode.Modified
-                );
-              });
-            });
-          });
-          realm.write(() => {
-            realm.create(
-              "LatestUpdatedDates",
-              {
-                userId: email,
-                latestDate: renewUpdatedDate,
-              },
-              Realm.UpdateMode.Modified
-            );
-          });
-        }
-      }
-      // 로컬 DB 와 서버 DB 동기화
-      U.readFromStorage("accessJWT")
-        .then((accessToken) => {
-          const updatedDate: any = realm.objectForPrimaryKey(
-            "LatestUpdatedDates",
-            email
-          );
-          let latestUpdatedDate = null;
-          updatedDate != null
-            ? (latestUpdatedDate = updatedDate.latestDate)
-            : null;
-          return { latestUpdatedDate, accessToken };
-        })
-        .then(({ latestUpdatedDate, accessToken }) => {
-          const renewUpdatedDate = moment().format("YYYY-MM-DD");
-          getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate); // latestUpdateDate 정책 수정 필요, 일단 latestUpdatedDate => null
         });
-
-      // 캘린더 마킹
-      const toBeMarkedDates = realm
-        .objects("Events")
-        .filtered(`deletedAt == null and userId = "${email}"`);
-      const toBeMarkedDatesObjects = toSetMarkedDatesObjects(toBeMarkedDates);
-      setMarkedDates(toBeMarkedDatesObjects);
-
-      // 오늘의 아젠다 불러오기
-      const todayAgenda = realm
-        .objects("Events")
-        .filtered(
-          `date == "${today}" && deletedAt == null && userId == "${email}"`
-        )
-        .sorted("startTime");
-      setAgendaData(toAgendaType(todayAgenda));
-
-      // 서버에서 삭제된 이벤트 지우기
-      // realm.write(() => {
-      //   const deletedEvents = realm
-      //     .objects("Events")
-      //     .filtered(`deletedAt != null && userId == "${email}"`);
-      //   realm.delete(deletedEvents);
-      // });
-      setRefresh(false);
+        realm.write(() => {
+          realm.create(
+            "LatestUpdatedDates",
+            {
+              userId: email,
+              latestDate: renewUpdatedDate,
+            },
+            Realm.UpdateMode.Modified
+          );
+        });
+      }
     }
+    // 로컬 DB 와 서버 DB 동기화
+    U.readFromStorage("accessJWT")
+      .then((accessToken) => {
+        const updatedDate: any = realm.objectForPrimaryKey(
+          "LatestUpdatedDates",
+          email
+        );
+        let latestUpdatedDate = null;
+        updatedDate != null
+          ? (latestUpdatedDate = updatedDate.latestDate)
+          : null;
+        return { latestUpdatedDate, accessToken };
+      })
+      .then(({ latestUpdatedDate, accessToken }) => {
+        const renewUpdatedDate = moment().format("YYYY-MM-DD");
+        getDataFromServer(accessToken, latestUpdatedDate, renewUpdatedDate); // latestUpdateDate 정책 수정 필요, 일단 latestUpdatedDate => null
+      });
+
+    // 캘린더 마킹
+    const toBeMarkedDates = realm
+      .objects("Events")
+      .filtered(`deletedAt == null and userId = "${email}"`);
+    const toBeMarkedDatesObjects = toSetMarkedDatesObjects(toBeMarkedDates);
+    setMarkedDates(toBeMarkedDatesObjects);
+
+    // 오늘의 아젠다 불러오기
+    const todayAgenda = realm
+      .objects("Events")
+      .filtered(
+        `date == "${today}" && deletedAt == null && userId == "${email}"`
+      )
+      .sorted("startTime");
+    setAgendaData(toAgendaType(todayAgenda));
   }, [refresh]); // 새로고침 dependancy로 넣기 (추가)
 
   useEffect(() => {
