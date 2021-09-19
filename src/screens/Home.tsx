@@ -33,6 +33,7 @@ export default function Home() {
 
   const store = useStore();
   const { accessJWT } = store.getState().asyncStorage;
+  const [accessToken, setAccessToken] = useState<string>(accessJWT);
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [today, setToday] = useState<string>(moment().format("YYYY-MM-DD"));
@@ -49,22 +50,28 @@ export default function Home() {
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    checkAuthorized();
-  }, []);
+    checkAuthorized().catch(async (e) => {
+      const errorStatus = e.response.status;
+      if (errorStatus === 401) {
+        // accessToken 만료 -> accessToken 업데이트
+        await updateToken();
+      } else {
+        Alert.alert("비정상적인 접근입니다");
+      }
+    });
+  }, [accessToken]);
 
   useEffect(() => {
     getMonthlyEventDataFromServer().catch(async (e) => {
       const errorStatus = e.response.status;
       if (errorStatus === 401) {
-        // accessJWT 만료 -> accessJWT 업데이트
+        // accessToken 만료 -> accessToken 업데이트
         await updateToken();
-        // 재요청
-        getMonthlyEventDataFromServer();
       } else {
         Alert.alert("비정상적인 접근입니다");
       }
     });
-  }, [isAuthorized, isFocused, currentYearMonth]);
+  }, [isAuthorized, isFocused, currentYearMonth, accessToken]);
 
   useEffect(() => {
     if (
@@ -79,16 +86,17 @@ export default function Home() {
   });
 
   const updateToken = async () => {
-    U.readFromStorage("refreshJWT").then((refreshToken: any) => {
+    U.readFromStorage("refreshJWT").then((refreshJWT: any) => {
       // accessJWT 재발급
       axios
         .get("/api/users/refresh-access", {
-          headers: { Authorization: `Bearer ${refreshToken}` },
+          headers: { Authorization: `Bearer ${refreshJWT}` },
         })
         .then((response) => {
           const renewedAccessToken = response.data.accessToken;
           U.writeToStorage("accessJWT", renewedAccessToken);
-          dispatch(A.setJWT(renewedAccessToken, refreshToken));
+          dispatch(A.setJWT(renewedAccessToken, refreshJWT));
+          setAccessToken(renewedAccessToken);
         });
     });
   };
@@ -96,31 +104,12 @@ export default function Home() {
   const checkAuthorized = async () => {
     await axios
       .get("/api/users/is-authorized", {
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((response) => {
         const isAuthorized = response.data.isAuthorized;
         setIsAuthorized(isAuthorized);
         dispatch(I.setIsAuthorized(isAuthorized));
-      })
-      .catch(async (e) => {
-        const errorStatus = e.response.status;
-        if (errorStatus === 401) {
-          // accessJWT 만료 -> accessJWT 업데이트
-          await updateToken();
-          // 재요청
-          await axios
-            .get("/api/users/is-authorized", {
-              headers: { Authorization: `Bearer ${accessJWT}` },
-            })
-            .then((response) => {
-              const isAuthorized = response.data.isAuthorized;
-              setIsAuthorized(isAuthorized);
-              dispatch(I.setIsAuthorized(isAuthorized));
-            });
-        } else {
-          Alert.alert("비정상적인 접근입니다");
-        }
       });
   };
 
@@ -128,25 +117,25 @@ export default function Home() {
     // 월별 이벤트 데이터 가져오기
     if (isAuthorized === true) {
       const followGroups = await axios.get("/api/follows/", {
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       const followGroupsArray = followGroups.data;
       const monthlyEvents: Array<any> = [];
       await Promise.all(
         followGroupsArray.map(async (group: any) => {
-          const response = await axios.get("/api/events/", {
+          const response = await axios.get("/api/events/monthly", {
             params: {
               groupId: group.GroupId,
               year: currentYearMonth.slice(0, 4),
               month: currentYearMonth.slice(5),
             },
-            headers: { Authorization: `Bearer ${accessJWT}` },
+            headers: { Authorization: `Bearer ${accessToken}` },
           });
-          const groupInfo: any = await axios.get("/api/groups/name", {
+          const groupInfo: any = await axios.get("/api/groups/group-info", {
             params: {
               groupId: group.GroupId,
             },
-            headers: { Authorization: `Bearer ${accessJWT}` },
+            headers: { Authorization: `Bearer ${accessToken}` },
           });
           const events = await Promise.all(
             response.data.map((event: any) => ({
