@@ -50,6 +50,7 @@ export default function Home() {
   const isFocused = useIsFocused();
 
   useEffect(() => {
+    // Authorization Check
     checkAuthorized().catch(async (e) => {
       const errorStatus = e.response.status;
       if (errorStatus === 401) {
@@ -62,6 +63,7 @@ export default function Home() {
   }, [accessToken]);
 
   useEffect(() => {
+    // Get monthly data from server
     getMonthlyEventDataFromServer().catch(async (e) => {
       const errorStatus = e.response.status;
       if (errorStatus === 401) {
@@ -74,11 +76,13 @@ export default function Home() {
   }, [isAuthorized, isFocused, currentYearMonth, accessToken]);
 
   useEffect(() => {
+    // 캘린더 마킹
     if (
       monthlyEventData &&
       !isEqual(monthlyEventData, prevMonthEventData.current)
     ) {
       prevMonthEventData.current = monthlyEventData;
+      setMarkedDates({});
       markCalendar();
       setLoading(false);
       SplashScreen.hide();
@@ -202,13 +206,22 @@ export default function Home() {
     const toBeMarkedDatesObjects = await toSetMarkedDatesObjects(
       monthlyEventData
     );
+
     setMarkedDates(toBeMarkedDatesObjects);
 
     // 오늘의 아젠다 불러오기
     const todayAgenda = await Promise.all(
       monthlyEventData.filter((event) => event.date == today)
     );
-    todayAgenda.sort((a, b) => (a.startTime >= b.startTime ? 1 : -1));
+    todayAgenda.sort((a, b) =>
+      a.startTime > b.startTime
+        ? 1
+        : a.startTime == b.startTime
+        ? a.GroupId > b.GroupId
+          ? 1
+          : -1
+        : -1
+    );
     setAgendaData(toAgendaType(todayAgenda));
   };
 
@@ -235,7 +248,15 @@ export default function Home() {
         (event) => event.date.slice(0, 10) == selectedDate
       )
     );
-    updatedAgenda.sort((a, b) => (a.startTime >= b.startTime ? 1 : -1));
+    updatedAgenda.sort((a, b) =>
+      a.startTime > b.startTime
+        ? 1
+        : a.startTime == b.startTime
+        ? a.GroupId > b.GroupId
+          ? 1
+          : -1
+        : -1
+    );
     setAgendaData(toAgendaType(updatedAgenda));
   };
 

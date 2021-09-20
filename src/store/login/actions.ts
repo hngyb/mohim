@@ -11,7 +11,6 @@ export const logoutAction = (): T.LogoutAction => ({
 });
 export const loggedUserKey = "loggedUser";
 export const signUpAction = (loggedUser: T.User) => (dispatch: Dispatch) => {
-  // 서버에서 회원 가입을 성공적으로 했다고 가정합니다.
   U.writeToStorage(loggedUserKey, JSON.stringify(loggedUser))
     .then(() => {
       dispatch(loginAction(loggedUser));

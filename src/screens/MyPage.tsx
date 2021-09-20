@@ -32,13 +32,13 @@ export default function MyPage() {
   }, []);
 
   const logout = useCallback(() => {
-    dispatch(L.logoutAction); // logout 확인 필요
+    dispatch(L.logoutAction());
     dispatch(A.setJWT("", ""));
     dispatch(I.setIsAuthorized(false));
     U.removeStorage(L.loggedUserKey);
     U.removeStorage("accessJWT");
     U.removeStorage("refreshJWT");
-    navigation.navigate("Auth");
+    // navigation.navigate("Auth");
   }, []);
 
   return (
