@@ -347,7 +347,7 @@ export default function Search() {
                 alignSelf: "center",
               }}
             >
-              {isBelongTo === true ? "소속 그룹" : ""}
+              {isBelongTo === true ? "소속" : ""}
             </Text>
             <TouchableView
               style={[
