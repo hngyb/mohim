@@ -4,7 +4,6 @@ import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useStore } from "react-redux";
 import { NavigationHeader, TouchableView } from "../components";
-import realm from "../models";
 import * as S from "./Styles";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
@@ -20,15 +19,15 @@ export default function Search() {
   const [selectedTempChurch, setSelectedTempChurch] = useState<string>("");
   const [searchDisable, setSearchDisabled] = useState<boolean>(true);
   const [selectedChurch, setSelectedChurch] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<String>("전체");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchedData, setSearchedData] = useState<Array<any>>([]);
-  const [requestAgain, setRequestAgain] = useState<boolean>(false);
+  const [searchAgain, setSearchAgain] = useState<boolean>(false);
   const [followingChanged, setFollowingChanged] = useState<boolean>(false);
   const [isChurchModalVisible, setChurchModalVisible] = useState(false);
   const store = useStore();
   const dispatch = useDispatch();
   const { accessJWT } = store.getState().asyncStorage;
-  const { email } = store.getState().login.loggedUser;
+  const [accessToken, setAccessToken] = useState<string>(accessJWT);
 
   const onLayout = useCallback((event) => {
     const { width } = event.nativeEvent.layout;
@@ -36,101 +35,115 @@ export default function Search() {
   }, []);
 
   useEffect(() => {
+    // 교회 리스트 가져오기
+    getChurchList().catch(async (e) => {
+      const errorStatus = e.response.status;
+      if (errorStatus === 401) {
+        await updateToken();
+      } else {
+        Alert.alert("비정상적인 접근입니다");
+      }
+    });
+  }, [accessToken]);
+
+  useEffect(() => {
+    // 그룹 검색
+    setLoading(true);
+    search().catch(async (e) => {
+      const errorStatus = e.response.status;
+      if (errorStatus === 401) {
+        await updateToken();
+      } else {
+        Alert.alert("비정상적인 접근입니다");
+      }
+    });
+  }, [selectedCategory, selectedChurch, searchAgain, accessToken]);
+
+  const getChurchList = async () => {
     axios
       .get("/api/groups/church-list", {
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((churchResponse) => {
         setChurchList(churchResponse.data);
         setSelectedTempChurch(churchResponse.data[0].name);
-        setRequestAgain(false);
-      })
-      .catch((e) => {
-        const errorStatus = e.response.status;
-        if (errorStatus === 401) {
-          // accessToken 만료
-          U.readFromStorage("refreshJWT").then((refreshToken: any) => {
-            // accessToken 재발급
-            axios
-              .get("/api/users/refresh-access", {
-                headers: { Authorization: `Bearer ${refreshToken}` },
-              })
-              .then((response) => {
-                const renewedAccessToken = response.data.accessToken;
-                U.writeToStorage("accessJWT", renewedAccessToken);
-                dispatch(A.setJWT(renewedAccessToken, refreshToken));
-              })
-              .then(() => {
-                // 재요청
-                setRequestAgain(true);
-              });
-          });
-        } else {
-          Alert.alert("비정상적인 접근입니다");
-        }
       });
-  }, [requestAgain]);
+  };
+
+  const updateToken = async () => {
+    U.readFromStorage("refreshJWT").then((refreshJWT: any) => {
+      // accessJWT 재발급
+      axios
+        .get("/api/users/refresh-access", {
+          headers: { Authorization: `Bearer ${refreshJWT}` },
+        })
+        .then((response) => {
+          const renewedAccessToken = response.data.accessToken;
+          U.writeToStorage("accessJWT", renewedAccessToken);
+          dispatch(A.setJWT(renewedAccessToken, refreshJWT));
+          setAccessToken(renewedAccessToken);
+        });
+    });
+  };
 
   const toggleChurchModal = () => {
     setChurchModalVisible(!isChurchModalVisible);
   };
 
-  const selectChurch = async (selectedTempChurch: string) => {
+  const selectChurch = (selectedTempChurch: string) => {
     setSearchDisabled(false);
+    setSearchAgain(!searchAgain);
     setSelectedChurch(selectedTempChurch);
-    search("전체");
+    setSelectedCategory("전체");
     toggleChurchModal();
-    setLoading(true);
   };
 
-  const search = (selectedCategory: string) => {
-    setSelectedCategory(selectedCategory);
+  const getIsFollow = async (
+    groupId: number,
+    followGroupsArray: Array<any>
+  ) => {
+    const result = await Promise.all(
+      followGroupsArray.filter((group) => group.GroupId === groupId)
+    );
+    return result.length === 0
+      ? { follow: false, isBelongTo: false }
+      : { follow: true, isBelongTo: result[0].isBelongTo };
+  };
+
+  const search = async () => {
     let search_address = "";
     selectedCategory === "전체"
       ? (search_address = "all-list")
       : selectedCategory === "구역"
       ? (search_address = "district-list")
-      : selectedCategory === "소속"
+      : selectedCategory === "부서"
       ? (search_address = "group-list")
       : (search_address = "service-list");
 
-    axios
-      .get(`/api/groups/${search_address}`, {
-        params: {
-          church: selectedTempChurch,
-        },
-        headers: { Authorization: `Bearer ${accessJWT}` },
+    const searchResponse = await axios.get(`/api/groups/${search_address}`, {
+      params: {
+        church: selectedTempChurch,
+      },
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const searchGroups = searchResponse.data;
+    const followGroups = await axios.get("/api/follows/", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const followGroupsArray = followGroups.data;
+    const result = await Promise.all(
+      searchGroups.map(async (group: any) => {
+        const groupId = group.id;
+        const followBelongTo = await getIsFollow(groupId, followGroupsArray);
+        return {
+          ...group,
+          follow: followBelongTo.follow,
+          isBelongTo: followBelongTo.isBelongTo,
+        };
       })
-      .then(async (response) => {
-        async function getIsBelongTo(groupId: number) {
-          const belongToGroup: any = realm
-            .objects("Follows")
-            .filtered(
-              `deletedAt == null and userId == "${email}" and groupId = "${groupId}"`
-            );
-          return belongToGroup.length === 0
-            ? { follow: false, isBelongTo: false }
-            : { follow: true, isBelongTo: belongToGroup[0].isBelongTo };
-        }
-
-        const groups = response.data;
-        const addedGroups = Promise.all(
-          groups.map(async (group: any) => {
-            const groupId = group.id;
-            const followBelongTo = await getIsBelongTo(groupId);
-            return {
-              ...group,
-              follow: followBelongTo.follow,
-              isBelongTo: followBelongTo.isBelongTo,
-            };
-          })
-        );
-        return addedGroups;
-      })
-      .then((groups) => {
-        setSearchedData(groups);
-        setLoading(false);
-      });
+    );
+    setSearchedData(result);
+    setLoading(false);
   };
 
   const churchModal = () => {
@@ -227,47 +240,14 @@ export default function Search() {
     );
   };
 
-  const changeFollowing = (
-    groupId: number,
-    follow: boolean,
-    groupName: string,
-    category: string,
-    church: string
-  ) => {
+  const changeFollowing = (groupId: number, follow: boolean) => {
     setFollowingChanged(!followingChanged);
     const foundIdx = searchedData.findIndex((object) => object.id === groupId);
     searchedData[foundIdx].follow = !follow;
     setSearchedData(searchedData);
 
     if (follow === true) {
-      // 원래 팔로잉 중이었으나 언팔한 경우
-      realm.write(() => {
-        const object = realm
-          .objects("Follows")
-          .filtered(
-            `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
-          );
-        realm.delete(object);
-        const events = realm
-          .objects("Events")
-          .filtered(
-            `deletedAt == null and userId == "${email}" and groupId == "${groupId}"`
-          );
-        const idArray: any = [];
-        events.forEach((item: any) => {
-          idArray.push(item.id);
-        });
-        idArray.map((id: number) => {
-          realm.create(
-            "Events",
-            {
-              id: id,
-              deletedAt: Date(),
-            },
-            Realm.UpdateMode.Modified
-          );
-        });
-      });
+      // 언팔한 경우
       axios.post(
         "/api/follows/delete",
         {
@@ -276,67 +256,14 @@ export default function Search() {
         { headers: { Authorization: `Bearer ${accessJWT}` } }
       );
     } else {
-      // 팔로잉
-      realm.write(() => {
-        realm.create(
-          "Groups",
-          {
-            id: groupId,
-            userId: email,
-            name: groupName,
-            church: church,
-            isPublic: true,
-            category: category,
-          },
-          Realm.UpdateMode.Modified
-        );
-        const newGroup = realm.create(
-          "Follows",
-          {
-            groupId: groupId,
-            userId: email,
-            isBelongTo: false,
-          },
-          Realm.UpdateMode.Modified
-        );
-        const events = realm
-          .objects("Events")
-          .filtered(`userId == "${email}" and groupId == "${groupId}"`)
-          .map((event: any) => {
-            realm.create(
-              "Events",
-              {
-                id: event.id,
-                deletedAt: null,
-              },
-              Realm.UpdateMode.Modified
-            );
-          });
-      });
-      // api post
-      axios
-        .post(
-          "/api/follows",
-          {
-            groupId: groupId,
-          },
-          { headers: { Authorization: `Bearer ${accessJWT}` } }
-        )
-        .then((response) => {
-          // 색상 업데이트
-          const color = response.data.color;
-          realm.write(() => {
-            realm.create(
-              "Follows",
-              {
-                groupId: groupId,
-                userId: email,
-                color: color,
-              },
-              Realm.UpdateMode.Modified
-            );
-          });
-        });
+      // 팔로우한 경우
+      axios.post(
+        "/api/follows",
+        {
+          groupId: groupId,
+        },
+        { headers: { Authorization: `Bearer ${accessJWT}` } }
+      );
     }
   };
 
@@ -344,9 +271,6 @@ export default function Search() {
     const groupId = item.item.id;
     const follow = item.item.follow;
     const isBelongTo = item.item.isBelongTo;
-    const groupName = item.item.name;
-    const category = item.item.category;
-    const church = item.item.church;
     return (
       <View style={{ flex: 1 }}>
         <Card>
@@ -405,7 +329,7 @@ export default function Search() {
                     : item.item.category === "district"
                     ? "구역"
                     : item.item.category === "group"
-                    ? "소속"
+                    ? "부서"
                     : item.item.category === "service"
                     ? "봉사"
                     : item.item.category === "fellowship"
@@ -435,7 +359,7 @@ export default function Search() {
                 },
               ]}
               onPress={() => {
-                changeFollowing(groupId, follow, groupName, category, church);
+                changeFollowing(groupId, follow);
               }}
               disabled={isBelongTo}
             >
@@ -509,7 +433,7 @@ export default function Search() {
                     : S.colors.secondary,
               },
             ]}
-            onPress={() => search("전체")}
+            onPress={() => setSelectedCategory("전체")}
             disabled={searchDisable}
           >
             <View style={[styles.category]}>
@@ -535,7 +459,7 @@ export default function Search() {
                     : S.colors.secondary,
               },
             ]}
-            onPress={() => search("구역")}
+            onPress={() => setSelectedCategory("구역")}
             disabled={searchDisable}
           >
             <View style={[styles.category]}>
@@ -554,24 +478,24 @@ export default function Search() {
               styles.categoryContainer,
               {
                 backgroundColor:
-                  selectedCategory == "소속" ? S.colors.primary : "white",
+                  selectedCategory == "부서" ? S.colors.primary : "white",
                 borderColor:
-                  selectedCategory == "소속"
+                  selectedCategory == "부서"
                     ? S.colors.primary
                     : S.colors.secondary,
               },
             ]}
-            onPress={() => search("소속")}
+            onPress={() => setSelectedCategory("부서")}
             disabled={searchDisable}
           >
             <View style={[styles.category]}>
               <Text
                 style={[
                   styles.categoryText,
-                  { color: selectedCategory == "소속" ? "white" : "black" },
+                  { color: selectedCategory == "부서" ? "white" : "black" },
                 ]}
               >
-                소속
+                부서
               </Text>
             </View>
           </TouchableView>
@@ -587,7 +511,7 @@ export default function Search() {
                     : S.colors.secondary,
               },
             ]}
-            onPress={() => search("봉사")}
+            onPress={() => setSelectedCategory("봉사")}
             disabled={searchDisable}
           >
             <View style={[styles.category]}>

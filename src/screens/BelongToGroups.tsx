@@ -86,7 +86,7 @@ export default function BelongToGroups() {
     setLoading(true);
     axios
       .get("/api/follows/belong-to", {
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((belongToGroups) => {
         setBelongToGroupsArray(belongToGroups.data);
@@ -120,17 +120,27 @@ export default function BelongToGroups() {
   useEffect(() => {
     // 색상 수정
     if (colorChanged) {
-      changeColor();
-      setColorChanged(false);
-
-      prevBelongToGroupsArray.current = [];
-      setBelongToChanged(!belongToChanged);
+      changeColor()
+        .then(() => {
+          setColorChanged(false);
+          prevBelongToGroupsArray.current = [];
+          setBelongToChanged(!belongToChanged);
+        })
+        .catch(async (e) => {
+          const errorStatus = e.response.status;
+          if (errorStatus === 401) {
+            // accessToken 만료 -> accessToken 업데이트
+            await updateToken();
+          } else {
+            Alert.alert("비정상적인 접근입니다");
+          }
+        });
     }
-  }, [colorChanged]);
+  }, [accessToken, colorChanged]);
 
   const getGroupList = async () => {
     const belongToChurch = await axios.get("/api/follows/belong-to-church", {
-      headers: { Authorization: `Bearer ${accessJWT}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     const churchName = belongToChurch.data.FollowGroup.name;
 
@@ -139,7 +149,7 @@ export default function BelongToGroups() {
         params: {
           church: churchName,
         },
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((districtList) => {
         setDistrictList(districtList.data);
@@ -149,7 +159,7 @@ export default function BelongToGroups() {
         params: {
           church: churchName,
         },
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((departmentList) => {
         setdepartmentList(departmentList.data);
@@ -159,7 +169,7 @@ export default function BelongToGroups() {
         params: {
           church: churchName,
         },
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((serviceList) => {
         const itemArray: any = [];
@@ -176,7 +186,7 @@ export default function BelongToGroups() {
 
   const updateToken = async () => {
     U.readFromStorage("refreshJWT").then((refreshJWT: any) => {
-      // accessJWT 재발급
+      // accessToken 재발급
       axios
         .get("/api/users/refresh-access", {
           headers: { Authorization: `Bearer ${refreshJWT}` },
@@ -257,7 +267,7 @@ export default function BelongToGroups() {
     setReviseModalVisible(!isReviseModalVisible);
   };
 
-  const changeColor = () => {
+  const changeColor = async () => {
     axios.post(
       "/api/follows/color",
       {
@@ -286,7 +296,7 @@ export default function BelongToGroups() {
             {
               groupId: groupId,
             },
-            { headers: { Authorization: `Bearer ${accessJWT}` } }
+            { headers: { Authorization: `Bearer ${accessToken}` } }
           );
         })
       );
@@ -298,15 +308,15 @@ export default function BelongToGroups() {
               name: service,
               church: church,
             },
-            headers: { Authorization: `Bearer ${accessJWT}` },
+            headers: { Authorization: `Bearer ${accessToken}` },
           });
           const groupId = response.data.id;
           axios.post(
-            "/api/follows",
+            "/api/follows/belong-to",
             {
               groupId: groupId,
             },
-            { headers: { Authorization: `Bearer ${accessJWT}` } }
+            { headers: { Authorization: `Bearer ${accessToken}` } }
           );
         })
       );
@@ -331,7 +341,7 @@ export default function BelongToGroups() {
           name: groupToBeDeleted,
           church: church,
         },
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       const groupIdToBeDeleted = groupInfoToBeDeleted.data.id;
       await axios.post(
@@ -339,7 +349,7 @@ export default function BelongToGroups() {
         {
           groupId: groupIdToBeDeleted,
         },
-        { headers: { Authorization: `Bearer ${accessJWT}` } }
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       // 새로운 그룹 추가
       const groupInfoToBeAdded = await axios.get("/api/groups", {
@@ -347,7 +357,7 @@ export default function BelongToGroups() {
           name: newGroup,
           church: church,
         },
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       const groupIdToBeAdded = groupInfoToBeAdded.data.id;
       await axios.post(
@@ -355,7 +365,7 @@ export default function BelongToGroups() {
         {
           groupId: groupIdToBeAdded,
         },
-        { headers: { Authorization: `Bearer ${accessJWT}` } }
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       setBelongToChanged(!belongToChanged);
     }
@@ -438,7 +448,7 @@ export default function BelongToGroups() {
                 })}
               </Picker>
             )}
-            {currentGroup == "소속" && (
+            {currentGroup == "부서" && (
               <Picker
                 style={{
                   flex: 1,
@@ -572,7 +582,7 @@ export default function BelongToGroups() {
                     : item.item.FollowGroup.category === "district"
                     ? "구역"
                     : item.item.FollowGroup.category === "group"
-                    ? "소속"
+                    ? "부서"
                     : item.item.FollowGroup.category === "service"
                     ? "봉사"
                     : item.item.FollowGroup.category === "fellowship"
@@ -719,7 +729,7 @@ export default function BelongToGroups() {
                   </Text>
                   <TouchableView
                     onPress={() => {
-                      toggleReviseModal("소속");
+                      toggleReviseModal("부서");
                     }}
                   >
                     <MaterialIcons
