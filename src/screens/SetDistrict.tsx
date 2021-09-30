@@ -9,6 +9,7 @@ import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
 import axios from "axios";
+import { isUndefined } from "lodash";
 
 export default function SetDistrict({ navigation, route }) {
   const store = useStore();
@@ -31,10 +32,15 @@ export default function SetDistrict({ navigation, route }) {
   };
 
   const goNext = () => {
-    const params = { ...route.params, district: selectedDistrict };
+    const params = {
+      ...route.params,
+      district: selectedDistrict,
+    };
     navigation.navigate("SetGroup", {
       ...params,
-      district: selectedDistrict,
+      district: isUndefined(params.district)
+        ? districtList[0].name
+        : selectedDistrict,
     });
   };
 

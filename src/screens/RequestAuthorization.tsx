@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -6,245 +5,157 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
 import { useDispatch, useStore } from "react-redux";
-import * as O from "../store/onBoarding";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
-import realm from "../models";
+
 import Realm from "realm";
 import axios from "axios";
 import { ActivityIndicator } from "react-native-paper";
+import { isUndefined } from "lodash";
 
 export default function RequestAuthorization({ navigation, route }) {
+  console.log(route.params);
   const store = useStore();
   const dispatch = useDispatch();
-  const { church, sex, district, group, services } =
-    store.getState().onBoarding;
-  const { email } = store.getState().login.loggedUser;
+  const { accessJWT } = store.getState().asyncStorage;
+  const [accessToken, setAccessToken] = useState<string>(accessJWT);
   const [inviteCode, setInviteCode] = useState<string>(
-    store.getState().onBoarding.inviteCode
+    route.params?.inviteCode
   );
+  const [request, setRequest] = useState<boolean>(false);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
+  const { church, department, district, group, services, sex } = route.params;
 
-  const goBack = useCallback(
-    () => navigation.canGoBack() && navigation.goBack(),
-    []
-  );
-  const randomColor = useCallback((palettes: Array<any>) => {
-    return palettes[Math.floor(Math.random() * palettes.length)];
-  }, []);
+  const goBack = () => {
+    const params = { ...route.params, inviteCode: inviteCode };
+    navigation.navigate("SetService", {
+      ...params,
+      inviteCode: inviteCode,
+    });
+  };
 
-  const requestAuthorization = useCallback(() => {
-    setLoading(true);
-    // inviteCode 유효성 검사
-    U.readFromStorage("accessJWT").then((accessToken) => {
-      axios
-        .post(
-          "/api/users/request-authorization",
-          {
-            inviteCode: inviteCode,
-          },
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        )
-        .then(async (response) => {
-          if (response.data.id === inviteCode) {
-            const churchGroupId = await axios.get("/api/groups/", {
-              params: {
-                name: church,
-                church: church,
-              },
-              headers: { Authorization: `Bearer ${accessToken}` },
+  useEffect(() => {
+    isUndefined(inviteCode)
+      ? setButtonDisabled(true)
+      : setButtonDisabled(false);
+  }, [inviteCode]);
+
+  useEffect(() => {
+    if (!isUndefined(inviteCode)) {
+      setLoading(true);
+      checkInviteCode()
+        .then((isValid) => {
+          if (isValid === true) {
+            register().then(() => {
+              setLoading(false);
+              navigation.navigate("TabNavigator");
             });
-            const districtGroupId = await axios.get("/api/groups/", {
-              params: {
-                name: district,
-                church: church,
-              },
-              headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            const groupGroupId = await axios.get("/api/groups/", {
-              params: {
-                name: group,
-                church: church,
-              },
-              headers: { Authorization: `Bearer ${accessToken}` },
-            });
-            const serviceGroups = await Promise.all(
-              services.map(async (service: string) => {
-                const serviceGroup = await axios.get("/api/groups/", {
-                  params: {
-                    name: service,
-                    church: church,
-                  },
-                  headers: { Authorization: `Bearer ${accessToken}` },
-                });
-                return serviceGroup.data;
-              })
-            );
-            const ids = {
-              churchGroupId: churchGroupId,
-              districtGroupId: districtGroupId,
-              groupGroupId: groupGroupId,
-              serviceGroups: serviceGroups,
-            };
-            return ids;
           }
         })
-        .then((ids: any) => {
-          realm.write(() => {
-            const groupChurch = realm.create(
-              "Groups",
-              {
-                id: ids.churchGroupId.data.id,
-                userId: email,
-                name: church,
-                church: church,
-                isPublic: true,
-                category: ids.churchGroupId.data.category,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const followChurch = realm.create(
-              "Follows",
-              {
-                groupId: ids.churchGroupId.data.id,
-                userId: email,
-                isBelongTo: true,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const groupDistrict = realm.create(
-              "Groups",
-              {
-                id: ids.districtGroupId.data.id,
-                userId: email,
-                name: district,
-                church: church,
-                isPublic: true,
-                category: ids.districtGroupId.data.category,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const followDistrict = realm.create(
-              "Follows",
-              {
-                groupId: ids.districtGroupId.data.id,
-                userId: email,
-                isBelongTo: true,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const groupGroup = realm.create(
-              "Groups",
-              {
-                id: ids.groupGroupId.data.id,
-                userId: email,
-                name: group,
-                church: church,
-                isPublic: true,
-                category: ids.groupGroupId.data.category,
-              },
-              Realm.UpdateMode.Modified
-            );
-            const followGroup = realm.create(
-              "Follows",
-              {
-                groupId: ids.groupGroupId.data.id,
-                userId: email,
-                isBelongTo: true,
-              },
-              Realm.UpdateMode.Modified
-            );
-            ids.serviceGroups.forEach((serviceGroup: any) => {
-              realm.create(
-                "Groups",
-                {
-                  id: serviceGroup.id,
-                  userId: email,
-                  name: serviceGroup.name,
-                  church: serviceGroup.church,
-                  isPublic: true,
-                  category: serviceGroup.category,
-                },
-                Realm.UpdateMode.Modified
-              );
-              realm.create(
-                "Follows",
-                {
-                  groupId: serviceGroup.id,
-                  userId: email,
-                  isBelongTo: true,
-                },
-                Realm.UpdateMode.Modified
-              );
-            });
-          });
-          const serviceGroupIds = ids.serviceGroups.map(
-            (serviceGroup: any) => serviceGroup.id
-          );
-          axios
-            .post(
-              "/api/users/register",
-              {
-                church: ids.churchGroupId.data.id,
-                district: ids.districtGroupId.data.id,
-                group: ids.groupGroupId.data.id,
-                services: serviceGroupIds,
-                sex: sex,
-              },
-              { headers: { Authorization: `Bearer ${accessToken}` } }
-            )
-            .then((response) => {
-              if (response.status === 201) {
-                setLoading(false);
-                Alert.alert("환영합니다!", "", [
-                  {
-                    text: "확인",
-                    onPress: () => navigation.navigate("TabNavigator"),
-                  },
-                ]);
-              }
-            });
-        })
-        .catch((e) => {
-          setLoading(false);
+        .catch(async (e) => {
           const errorStatus = e.response.status;
           if (errorStatus === 400) {
             // 초대코드 오류
             Alert.alert("초대코드를 확인해주세요", "", [{ text: "확인" }]);
-          } else if (errorStatus === 401) {
-            // accessToken 만료
-            U.readFromStorage("refreshJWT").then((refreshToken) => {
-              // accessToken 재발급
-              axios
-                .get("/api/users/refresh-access", {
-                  headers: { Authorization: `Bearer ${refreshToken}` },
-                })
-                .then((response) => {
-                  const renewedAccessToken = response.data.accessToken;
-                  U.writeToStorage("accessJWT", renewedAccessToken);
-                  dispatch(A.setJWT(renewedAccessToken, refreshToken));
-                })
-                .then(() => {
-                  // 재요청
-                  requestAuthorization();
-                });
-            });
-          } else {
-            Alert.alert("비정상적인 접근입니다");
           }
+          if (errorStatus === 401) {
+            // accessToken 만료 -> accessToken 업데이트
+            Alert.alert("비정상적인 접근입니다");
+            await updateToken();
+          }
+          setLoading(false);
+        });
+    }
+  }, [accessToken, request]);
+
+  const checkInviteCode = async () => {
+    const response = await axios.post(
+      "/api/users/request-authorization",
+      {
+        inviteCode: inviteCode,
+      },
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (response.data.id === inviteCode) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const register = async () => {
+    const churchGroupId = await axios.get("/api/groups/", {
+      params: {
+        name: church,
+        church: church,
+      },
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const districtGroupId = await axios.get("/api/groups/", {
+      params: {
+        name: district,
+        church: church,
+      },
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const departmentGroupId = await axios.get("/api/groups/", {
+      params: {
+        name: department,
+        church: church,
+      },
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const serviceGroups = await Promise.all(
+      services.map(async (service: string) => {
+        const serviceGroup = await axios.get("/api/groups/", {
+          params: {
+            name: service,
+            church: church,
+          },
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        return serviceGroup.data;
+      })
+    );
+    const groupIds = {
+      churchGroupId: churchGroupId,
+      districtGroupId: districtGroupId,
+      groupGroupId: departmentGroupId,
+      serviceGroups: serviceGroups,
+    };
+    axios.post(
+      "/api/users/register",
+      {
+        church: groupIds.churchGroupId.data.id,
+        district: groupIds.districtGroupId.data.id,
+        group: groupIds.groupGroupId.data.id,
+        services: serviceGroups,
+        sex: sex,
+      },
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+  };
+
+  const updateToken = async () => {
+    U.readFromStorage("refreshJWT").then((refreshJWT: any) => {
+      // accessToken 재발급
+      axios
+        .get("/api/users/refresh-access", {
+          headers: { Authorization: `Bearer ${refreshJWT}` },
+        })
+        .then((response) => {
+          const renewedAccessToken = response.data.accessToken;
+          U.writeToStorage("accessJWT", renewedAccessToken);
+          dispatch(A.setJWT(renewedAccessToken, refreshJWT));
+          setAccessToken(renewedAccessToken);
         });
     });
-  }, [inviteCode]);
+  };
 
   const doNextTime = useCallback(() => {
     navigation.navigate("TabNavigator");
   }, []);
-
-  useEffect(() => {
-    dispatch(O.setProfile(church, sex, district, group, services, inviteCode));
-    inviteCode === "" ? setButtonDisabled(true) : setButtonDisabled(false);
-  }, [inviteCode]);
 
   return (
     <SafeAreaView style={[styles.container]}>
@@ -307,7 +218,7 @@ export default function RequestAuthorization({ navigation, route }) {
                     },
                   ]}
                   disabled={buttonDisabled}
-                  onPress={requestAuthorization}
+                  onPress={() => setRequest(!request)}
                 >
                   <Text style={[styles.nextText]}>성도 인증하기</Text>
                 </TouchableView>

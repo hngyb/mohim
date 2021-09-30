@@ -9,6 +9,7 @@ import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
 import axios from "axios";
+import { isUndefined } from "lodash";
 
 export default function SetGroup({ navigation, route }) {
   const store = useStore();
@@ -23,7 +24,7 @@ export default function SetGroup({ navigation, route }) {
   const church = route.params.church;
 
   const goBack = () => {
-    const params = { ...route.params, group: selectedDepartment };
+    const params = { ...route.params, department: selectedDepartment };
     navigation.navigate("SetDistrict", {
       ...params,
       department: selectedDepartment,
@@ -31,10 +32,15 @@ export default function SetGroup({ navigation, route }) {
   };
 
   const goNext = () => {
-    const params = { ...route.params, group: selectedDepartment };
+    const params = {
+      ...route.params,
+      department: selectedDepartment,
+    };
     navigation.navigate("SetService", {
       ...params,
-      department: selectedDepartment,
+      department: isUndefined(selectedDepartment)
+        ? departmentList[0].name
+        : selectedDepartment,
     });
   };
 

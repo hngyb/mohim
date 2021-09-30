@@ -108,6 +108,7 @@ export default function BelongToGroups() {
       belongToGroupsArray &&
       !isEqual(belongToGroupsArray, prevBelongToGroupsArray.current)
     ) {
+      console.log(belongToGroupsArray);
       prevBelongToGroupsArray.current = belongToGroupsArray;
       belongToGroupsArrayToObject().then(() => {
         setLoading(false);
