@@ -42,7 +42,7 @@ export default function BelongToGroups() {
   const [districtList, setDistrictList] = useState<Array<any>>([]);
   const [department, setDepartment] = useState<string>("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
-  const [departmentList, setdepartmentList] = useState<Array<any>>([]);
+  const [departmentList, setDepartmentList] = useState<Array<any>>([]);
   const [service, setService] = useState<Array<any>>([]);
   const [selectedSerivice, setSelectedService] = useState<Array<any>>([]);
   const [open, setOpen] = useState(false);
@@ -162,7 +162,7 @@ export default function BelongToGroups() {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((departmentList) => {
-        setdepartmentList(departmentList.data);
+        setDepartmentList(departmentList.data);
       });
     axios
       .get("/api/groups/service-list", {

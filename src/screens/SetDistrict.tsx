@@ -1,5 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,72 +8,82 @@ import * as S from "./Styles";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
-import * as O from "../store/onBoarding";
 import axios from "axios";
 
-export default function SetDistrict() {
+export default function SetDistrict({ navigation, route }) {
   const store = useStore();
   const dispatch = useDispatch();
-  const { church, sex, district, group, services, inviteCode } =
-    store.getState().onBoarding;
   const { accessJWT } = store.getState().asyncStorage;
-  const [selectedDistrict, setSelectedDistrict] = useState<string>(district);
-  const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
-  const [districts, setDistricts] = useState<Array<any>>([]);
-  const [requestAgain, setRequestAgain] = useState<boolean>(false);
-
-  const navigation = useNavigation();
-  const goBack = useCallback(
-    () => navigation.canGoBack() && navigation.goBack(),
-    []
+  const [accessToken, setAccessToken] = useState<string>(accessJWT);
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(
+    route.params?.district
   );
-  const goNext = useCallback(() => {
-    navigation.navigate("SetGroup");
-  }, []);
+  const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
+  const [districtList, setDistrictList] = useState<Array<any>>([]);
+  const church = route.params.church;
 
-  useEffect(() => {
-    const response = axios
-      .get("/api/groups/district-list", {
-        params: {
-          church: church,
-        },
-        headers: { Authorization: `Bearer ${accessJWT}` },
-      })
-      .then((response) => {
-        setDistricts(response.data);
-        setRequestAgain(false);
-      })
-      .catch((e) => {
-        const errorStatus = e.response.status;
-        if (errorStatus === 401) {
-          // accessToken 만료
-          U.readFromStorage("refreshJWT").then((refreshToken: any) => {
-            // accessToken 재발급
-            axios
-              .get("/api/users/refresh-access", {
-                headers: { Authorization: `Bearer ${refreshToken}` },
-              })
-              .then((response) => {
-                const renewedAccessToken = response.data.accessToken;
-                U.writeToStorage("accessJWT", renewedAccessToken);
-                dispatch(A.setJWT(renewedAccessToken, refreshToken));
-              })
-              .then(() => {
-                // 재요청
-                setRequestAgain(true);
-              });
-          });
-        } else {
-          Alert.alert("비정상적인 접근입니다");
-        }
-      });
-  }, [requestAgain]);
+  const goBack = () => {
+    const params = { ...route.params, district: selectedDistrict };
+    navigation.navigate("SetSex", {
+      ...params,
+      district: selectedDistrict,
+    });
+  };
+
+  const goNext = () => {
+    const params = { ...route.params, district: selectedDistrict };
+    navigation.navigate("SetGroup", {
+      ...params,
+      district: selectedDistrict,
+    });
+  };
 
   useEffect(() => {
     selectedDistrict === ""
       ? setButtonDisabled(true)
       : setButtonDisabled(false);
   }, [selectedDistrict]);
+
+  useEffect(() => {
+    getDistrictList().catch(async (e) => {
+      const errorStatus = e.response.status;
+      if (errorStatus === 401) {
+        // accessToken 만료 -> accessToken 업데이트
+        await updateToken();
+      } else {
+        Alert.alert("비정상적인 접근입니다");
+      }
+    });
+  }, [accessToken]);
+
+  const updateToken = async () => {
+    U.readFromStorage("refreshJWT").then((refreshJWT: any) => {
+      // accessToken 재발급
+      axios
+        .get("/api/users/refresh-access", {
+          headers: { Authorization: `Bearer ${refreshJWT}` },
+        })
+        .then((response) => {
+          const renewedAccessToken = response.data.accessToken;
+          U.writeToStorage("accessJWT", renewedAccessToken);
+          dispatch(A.setJWT(renewedAccessToken, refreshJWT));
+          setAccessToken(renewedAccessToken);
+        });
+    });
+  };
+
+  const getDistrictList = async () => {
+    axios
+      .get("/api/groups/district-list", {
+        params: {
+          church: church,
+        },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      .then((districtList) => {
+        setDistrictList(districtList.data);
+      });
+  };
 
   return (
     <SafeAreaView style={[styles.container]}>
@@ -108,19 +117,9 @@ export default function SetDistrict() {
             selectedValue={selectedDistrict}
             onValueChange={(itemValue, itemIndex) => {
               setSelectedDistrict(itemValue);
-              dispatch(
-                O.setProfile(
-                  church,
-                  sex,
-                  itemValue,
-                  group,
-                  services,
-                  inviteCode
-                )
-              );
             }}
           >
-            {districts.map((district) => {
+            {districtList.map((district) => {
               return (
                 <Picker.Item
                   key={district}

@@ -1,34 +1,29 @@
-import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
-import { Colors } from "react-native-paper";
-import Color from "color";
-import { useDispatch, useStore } from "react-redux";
-import * as O from "../store/onBoarding";
+import { isNull, isUndefined } from "lodash";
 
-export default function SetSex() {
-  const store = useStore();
-  const dispatch = useDispatch();
-  const { church, sex, district, group, services, inviteCode } =
-    store.getState().onBoarding;
-  const [selectedSex, setSelectedSex] = useState<string>(sex);
+export default function SetSex({ navigation, route }) {
+  const [selectedSex, setSelectedSex] = useState<string>(route.params?.sex);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
-  const navigation = useNavigation();
-  const goBack = useCallback(
-    () => navigation.canGoBack() && navigation.goBack(),
-    []
-  );
-  const goNext = useCallback(() => {
-    navigation.navigate("SetDistrict");
-  }, []);
+
+  const goBack = () => {
+    const params = { ...route.params, sex: selectedSex };
+    navigation.navigate("SetChurch", { ...params, sex: selectedSex });
+  };
+
+  const goNext = () => {
+    const params = { ...route.params, sex: selectedSex };
+    navigation.navigate("SetDistrict", { ...params, sex: selectedSex });
+  };
 
   useEffect(() => {
-    selectedSex === "" ? setButtonDisabled(true) : setButtonDisabled(false);
+    isUndefined(selectedSex)
+      ? setButtonDisabled(true)
+      : setButtonDisabled(false);
   }, [selectedSex]);
 
   return (
@@ -71,16 +66,6 @@ export default function SetSex() {
             }}
             onPress={() => {
               setSelectedSex("brother");
-              dispatch(
-                O.setProfile(
-                  church,
-                  "brother",
-                  district,
-                  group,
-                  services,
-                  inviteCode
-                )
-              );
             }}
           >
             <Text
@@ -109,16 +94,6 @@ export default function SetSex() {
             }}
             onPress={() => {
               setSelectedSex("sister");
-              dispatch(
-                O.setProfile(
-                  church,
-                  "sister",
-                  district,
-                  group,
-                  services,
-                  inviteCode
-                )
-              );
             }}
           >
             <Text

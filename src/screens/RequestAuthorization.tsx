@@ -14,13 +14,12 @@ import Realm from "realm";
 import axios from "axios";
 import { ActivityIndicator } from "react-native-paper";
 
-export default function RequestAuthorization() {
+export default function RequestAuthorization({ navigation, route }) {
   const store = useStore();
   const dispatch = useDispatch();
   const { church, sex, district, group, services } =
     store.getState().onBoarding;
   const { email } = store.getState().login.loggedUser;
-  const navigation = useNavigation();
   const [inviteCode, setInviteCode] = useState<string>(
     store.getState().onBoarding.inviteCode
   );

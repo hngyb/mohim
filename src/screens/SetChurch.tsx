@@ -1,7 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import React, { useEffect, useState } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
@@ -9,62 +7,63 @@ import * as S from "./Styles";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
-import * as O from "../store/onBoarding";
 import { Picker } from "@react-native-picker/picker";
 import axios from "axios";
-import { concat } from "lodash";
 
-export default function SetChurch() {
+export default function SetChurch({ navigation, route }) {
   const store = useStore();
-  const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { church, sex, district, group, services, inviteCode } =
-    store.getState().onBoarding;
   const { accessJWT } = store.getState().asyncStorage;
-  const [selectedChurch, setSelectedChurch] = useState<string>(church);
+  const [accessToken, setAccessToken] = useState<string>(accessJWT);
+  const [selectedChurch, setSelectedChurch] = useState<string>(
+    route.params?.church
+  );
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
-  const [requestAgain, setRequestAgain] = useState<boolean>(false);
+  const [churchList, setChurcList] = useState<Array<any>>([]);
 
-  const goNext = useCallback(() => {
-    navigation.navigate("SetSex");
-  }, []);
-  const [churches, setChurches] = useState<Array<any>>([]);
+  const goNext = () => {
+    const params = { ...route.params, church: selectedChurch };
+    navigation.navigate("SetSex", { ...params, church: selectedChurch });
+  };
 
   useEffect(() => {
-    const response = axios
-      .get("/api/groups/church-list", {
-        headers: { Authorization: `Bearer ${accessJWT}` },
+    getChurchList()
+      .then(() => {
+        SplashScreen.hide();
       })
-      .then((response) => {
-        setChurches(response.data);
-        setRequestAgain(false);
-      })
-      .catch((e) => {
+      .catch(async (e) => {
         const errorStatus = e.response.status;
         if (errorStatus === 401) {
-          // accessToken 만료
-          U.readFromStorage("refreshJWT").then((refreshToken: any) => {
-            // accessToken 재발급
-            axios
-              .get("/api/users/refresh-access", {
-                headers: { Authorization: `Bearer ${refreshToken}` },
-              })
-              .then((response) => {
-                const renewedAccessToken = response.data.accessToken;
-                U.writeToStorage("accessJWT", renewedAccessToken);
-                dispatch(A.setJWT(renewedAccessToken, refreshToken));
-              })
-              .then(() => {
-                // 재요청
-                setRequestAgain(true);
-              });
-          });
+          await updateToken();
         } else {
           Alert.alert("비정상적인 접근입니다");
         }
       });
-    SplashScreen.hide();
-  }, [requestAgain]);
+  }, []);
+
+  const getChurchList = async () => {
+    const response = await axios.get("/api/groups/church-list", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    setSelectedChurch(response.data[0].name);
+    setChurcList(response.data);
+  };
+
+  const updateToken = async () => {
+    U.readFromStorage("refreshJWT").then((refreshJWT: any) => {
+      // accessToken 재발급
+      axios
+        .get("/api/users/refresh-access", {
+          headers: { Authorization: `Bearer ${refreshJWT}` },
+        })
+        .then((response) => {
+          const renewedAccessToken = response.data.accessToken;
+          U.writeToStorage("accessJWT", renewedAccessToken);
+          dispatch(A.setJWT(renewedAccessToken, refreshJWT));
+          setAccessToken(renewedAccessToken);
+        });
+    });
+  };
 
   useEffect(() => {
     selectedChurch === "" ? setButtonDisabled(true) : setButtonDisabled(false);
@@ -96,19 +95,9 @@ export default function SetChurch() {
             selectedValue={selectedChurch}
             onValueChange={(itemValue, itemIndex) => {
               setSelectedChurch(itemValue);
-              dispatch(
-                O.setProfile(
-                  itemValue,
-                  sex,
-                  district,
-                  group,
-                  services,
-                  inviteCode
-                )
-              );
             }}
           >
-            {churches.map((church) => {
+            {churchList.map((church) => {
               return (
                 <Picker.Item
                   key={church}

@@ -1,78 +1,90 @@
-import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SplashScreen from "react-native-splash-screen";
 import { NavigationHeader, TouchableView } from "../components";
 import { Picker } from "@react-native-picker/picker";
 import * as S from "./Styles";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
-import * as O from "../store/onBoarding";
 import { useDispatch, useStore } from "react-redux";
 import axios from "axios";
 
-export default function SetGroup() {
+export default function SetGroup({ navigation, route }) {
   const store = useStore();
   const dispatch = useDispatch();
-  const { church, sex, district, group, services, inviteCode } =
-    store.getState().onBoarding;
-  const [selectedGroup, setSelectedGroup] = useState<string>(group);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>(
+    route.params?.department
+  );
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const { accessJWT } = store.getState().asyncStorage;
-  const [groups, setGroups] = useState<Array<any>>([]);
-  const [requestAgain, setRequestAgain] = useState<boolean>(false);
-  const navigation = useNavigation();
-  const goBack = useCallback(
-    () => navigation.canGoBack() && navigation.goBack(),
-    []
-  );
-  const goNext = useCallback(() => {
-    navigation.navigate("SetService");
-  }, []);
+  const [accessToken, setAccessToken] = useState<string>(accessJWT);
+  const [departmentList, setDepartmentList] = useState<Array<any>>([]);
+  const church = route.params.church;
+
+  const goBack = () => {
+    const params = { ...route.params, group: selectedDepartment };
+    navigation.navigate("SetDistrict", {
+      ...params,
+      department: selectedDepartment,
+    });
+  };
+
+  const goNext = () => {
+    const params = { ...route.params, group: selectedDepartment };
+    navigation.navigate("SetService", {
+      ...params,
+      department: selectedDepartment,
+    });
+  };
 
   useEffect(() => {
-    const response = axios
+    selectedDepartment === ""
+      ? setButtonDisabled(true)
+      : setButtonDisabled(false);
+  }, [selectedDepartment]);
+
+  useEffect(() => {
+    // 그룹 리스트 가져오기
+    getDepartmentList().catch(async (e) => {
+      const errorStatus = e.response.status;
+      if (errorStatus === 401) {
+        // accessToken 만료 -> accessToken 업데이트
+        await updateToken();
+      } else {
+        Alert.alert("비정상적인 접근입니다");
+      }
+    });
+  }, [accessToken]);
+
+  const updateToken = async () => {
+    U.readFromStorage("refreshJWT").then((refreshJWT: any) => {
+      // accessToken 재발급
+      axios
+        .get("/api/users/refresh-access", {
+          headers: { Authorization: `Bearer ${refreshJWT}` },
+        })
+        .then((response) => {
+          const renewedAccessToken = response.data.accessToken;
+          U.writeToStorage("accessJWT", renewedAccessToken);
+          dispatch(A.setJWT(renewedAccessToken, refreshJWT));
+          setAccessToken(renewedAccessToken);
+        });
+    });
+  };
+
+  const getDepartmentList = async () => {
+    axios
       .get("/api/groups/group-list", {
         params: {
           church: church,
         },
-        headers: { Authorization: `Bearer ${accessJWT}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
-      .then((response) => {
-        setGroups(response.data);
-        setRequestAgain(false);
-      })
-      .catch((e) => {
-        const errorStatus = e.response.status;
-        if (errorStatus === 401) {
-          // accessToken 만료
-          U.readFromStorage("refreshJWT").then((refreshToken: any) => {
-            // accessToken 재발급
-            axios
-              .get("/api/users/refresh-access", {
-                headers: { Authorization: `Bearer ${refreshToken}` },
-              })
-              .then((response) => {
-                const renewedAccessToken = response.data.accessToken;
-                U.writeToStorage("accessJWT", renewedAccessToken);
-                dispatch(A.setJWT(renewedAccessToken, refreshToken));
-              })
-              .then(() => {
-                // 재요청
-                setRequestAgain(true);
-              });
-          });
-        } else {
-          Alert.alert("비정상적인 접근입니다");
-        }
+      .then((departmentList) => {
+        setDepartmentList(departmentList.data);
       });
-  }, [requestAgain]);
-
-  useEffect(() => {
-    selectedGroup === "" ? setButtonDisabled(true) : setButtonDisabled(false);
-  }, [selectedGroup]);
+  };
 
   return (
     <SafeAreaView style={[styles.container]}>
@@ -103,27 +115,17 @@ export default function SetGroup() {
             itemStyle={{
               fontFamily: S.fonts.medium,
             }}
-            selectedValue={selectedGroup}
+            selectedValue={selectedDepartment}
             onValueChange={(itemValue, itemIndex) => {
-              setSelectedGroup(itemValue);
-              dispatch(
-                O.setProfile(
-                  church,
-                  sex,
-                  district,
-                  itemValue,
-                  services,
-                  inviteCode
-                )
-              );
+              setSelectedDepartment(itemValue);
             }}
           >
-            {groups.map((group) => {
+            {departmentList.map((department) => {
               return (
                 <Picker.Item
-                  key={group}
-                  label={group.name}
-                  value={group.name}
+                  key={department}
+                  label={department.name}
+                  value={department.name}
                 />
               );
             })}
