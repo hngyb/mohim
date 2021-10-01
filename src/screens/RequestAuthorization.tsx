@@ -7,8 +7,6 @@ import * as S from "./Styles";
 import { useDispatch, useStore } from "react-redux";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
-
-import Realm from "realm";
 import axios from "axios";
 import { ActivityIndicator } from "react-native-paper";
 import { isUndefined } from "lodash";

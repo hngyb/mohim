@@ -85,7 +85,6 @@ export default function Home() {
       setMarkedDates({});
       markCalendar();
       setLoading(false);
-      SplashScreen.hide();
     }
   });
 
@@ -152,6 +151,8 @@ export default function Home() {
         })
       );
       setMonthEventData(monthlyEvents);
+    } else {
+      setLoading(false);
     }
   };
 

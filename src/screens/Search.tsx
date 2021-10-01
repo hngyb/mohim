@@ -27,6 +27,7 @@ export default function Search() {
   const store = useStore();
   const dispatch = useDispatch();
   const { accessJWT } = store.getState().asyncStorage;
+  const { isAuthorized } = store.getState().isAuthorized;
   const [accessToken, setAccessToken] = useState<string>(accessJWT);
 
   const onLayout = useCallback((event) => {
@@ -396,6 +397,7 @@ export default function Search() {
             style={[styles.searchBar]}
             activeOpacity={0.7}
             onPress={toggleChurchModal}
+            disabled={isAuthorized === false ? true : false}
           >
             <Text>
               <Icon name="search-outline" size={20}></Icon>
@@ -407,7 +409,11 @@ export default function Search() {
                 }}
               >
                 {"   "}
-                {selectedChurch == "" ? "교회를 선택해 주세요" : selectedChurch}
+                {isAuthorized === false
+                  ? "성도 인증을 해주세요"
+                  : selectedChurch == ""
+                  ? "교회를 선택해 주세요"
+                  : selectedChurch}
               </Text>
             </Text>
           </TouchableView>

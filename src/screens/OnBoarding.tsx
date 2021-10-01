@@ -22,11 +22,6 @@ export default function OnBoarding() {
         name="RequestAuthorization"
         component={RequestAuthorization}
       ></Stack.Screen>
-      <Stack.Screen
-        name="TabNavigator"
-        options={{ animationEnabled: false }}
-        component={TabNavigator}
-      ></Stack.Screen>
     </Stack.Navigator>
   );
 }

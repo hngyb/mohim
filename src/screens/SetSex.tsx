@@ -4,7 +4,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
-import { isNull, isUndefined } from "lodash";
+import { isUndefined } from "lodash";
 
 export default function SetSex({ navigation, route }) {
   const [selectedSex, setSelectedSex] = useState<string>(route.params?.sex);
