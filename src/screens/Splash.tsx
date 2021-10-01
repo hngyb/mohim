@@ -7,6 +7,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import SplashScreen from "react-native-splash-screen";
 import { Image, StyleSheet, View } from "react-native";
+import { getCookie } from "../utils";
 
 export default function Splash() {
   const navigation = useNavigation();
@@ -26,16 +27,22 @@ export default function Splash() {
             })
             .then((response) => {
               // 자동 로그인 진행
-              const { accessToken, refreshToken } = response.data;
+              const tokens = response.headers["set-cookie"][0];
+              const accessToken = getCookie(tokens, "accessToken");
+              const refreshToken = getCookie(tokens, "refreshToken");
               U.writeToStorage("accessJWT", accessToken);
               U.writeToStorage("refreshJWT", refreshToken);
               dispatch(A.setJWT(accessToken, refreshToken));
-              U.readFromStorage(L.loggedUserKey).then((value) => {
-                const user = JSON.parse(value);
-                const { email, name, password } = user;
-                dispatch(L.loginAction({ email, name, password }));
-                goHome();
-              });
+              U.readFromStorage(L.loggedUserKey)
+                .then((value) => {
+                  const user = JSON.parse(value);
+                  const { email, name, password } = user;
+                  dispatch(L.loginAction({ email, name, password }));
+                })
+                .then(() => {
+                  SplashScreen.hide();
+                  goHome();
+                });
             })
             .catch((e) => {
               SplashScreen.hide(); // splashScreen 닫기

@@ -16,6 +16,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { NavigationHeader, TouchableView } from "../components";
 import * as S from "./Styles";
+import { getCookie } from "../utils";
 
 /*
 Todo
@@ -37,7 +38,10 @@ export default function Login() {
     axios
       .post("/api/users/login", { email, password })
       .then((response) => {
-        const { accessToken, refreshToken, name } = response.data;
+        const tokens = response.headers["set-cookie"][0];
+        const accessToken = getCookie(tokens, "accessToken");
+        const refreshToken = getCookie(tokens, "refreshToken");
+        const { name } = response.data.user;
         U.writeToStorage("accessJWT", accessToken);
         U.writeToStorage("refreshJWT", refreshToken);
         U.writeToStorage(

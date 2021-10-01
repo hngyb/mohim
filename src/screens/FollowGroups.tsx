@@ -12,6 +12,7 @@ import * as S from "./Styles";
 import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import axios from "axios";
+import { getCookie } from "../utils";
 
 export default function FollowGroups() {
   const [loading, setLoading] = useState(false);
@@ -84,7 +85,8 @@ export default function FollowGroups() {
           headers: { Authorization: `Bearer ${refreshJWT}` },
         })
         .then((response) => {
-          const renewedAccessToken = response.data.accessToken;
+          const tokens = response.headers["set-cookie"][0];
+          const renewedAccessToken = getCookie(tokens, "accessToken");
           U.writeToStorage("accessJWT", renewedAccessToken);
           dispatch(A.setJWT(renewedAccessToken, refreshJWT));
           setAccessToken(renewedAccessToken);

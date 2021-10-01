@@ -10,6 +10,7 @@ import * as A from "../store/asyncStorage";
 import axios from "axios";
 import { ActivityIndicator } from "react-native-paper";
 import { isUndefined } from "lodash";
+import { getCookie } from "../utils";
 
 export default function RequestAuthorization({ navigation, route }) {
   console.log(route.params);
@@ -143,7 +144,8 @@ export default function RequestAuthorization({ navigation, route }) {
           headers: { Authorization: `Bearer ${refreshJWT}` },
         })
         .then((response) => {
-          const renewedAccessToken = response.data.accessToken;
+          const tokens = response.headers["set-cookie"][0];
+          const renewedAccessToken = getCookie(tokens, "accessToken");
           U.writeToStorage("accessJWT", renewedAccessToken);
           dispatch(A.setJWT(renewedAccessToken, refreshJWT));
           setAccessToken(renewedAccessToken);

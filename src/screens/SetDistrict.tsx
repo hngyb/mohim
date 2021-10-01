@@ -10,6 +10,7 @@ import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
 import axios from "axios";
 import { isUndefined } from "lodash";
+import { getCookie } from "../utils";
 
 export default function SetDistrict({ navigation, route }) {
   const store = useStore();
@@ -70,7 +71,8 @@ export default function SetDistrict({ navigation, route }) {
           headers: { Authorization: `Bearer ${refreshJWT}` },
         })
         .then((response) => {
-          const renewedAccessToken = response.data.accessToken;
+          const tokens = response.headers["set-cookie"][0];
+          const renewedAccessToken = getCookie(tokens, "accessToken");
           U.writeToStorage("accessJWT", renewedAccessToken);
           dispatch(A.setJWT(renewedAccessToken, refreshJWT));
           setAccessToken(renewedAccessToken);

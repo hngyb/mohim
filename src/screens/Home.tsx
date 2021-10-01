@@ -27,6 +27,7 @@ import { useDispatch, useStore } from "react-redux";
 import { ActivityIndicator } from "react-native-paper";
 import { useIsFocused } from "@react-navigation/native";
 import { isEqual } from "lodash";
+import { getCookie } from "../utils";
 
 export default function Home() {
   LogBox.ignoreLogs(["Warning: Encountered two children with the same key,"]); // toSetMarkedDatesObjects 함수에서 objectKey 중복에 대한 경고 무시하기
@@ -96,7 +97,8 @@ export default function Home() {
           headers: { Authorization: `Bearer ${refreshJWT}` },
         })
         .then((response) => {
-          const renewedAccessToken = response.data.accessToken;
+          const tokens = response.headers["set-cookie"][0];
+          const renewedAccessToken = getCookie(tokens, "accessToken");
           U.writeToStorage("accessJWT", renewedAccessToken);
           dispatch(A.setJWT(renewedAccessToken, refreshJWT));
           setAccessToken(renewedAccessToken);
