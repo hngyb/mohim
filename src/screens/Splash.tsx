@@ -1,15 +1,17 @@
 import React, { useEffect, useCallback } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused } from "@react-navigation/native";
 import * as U from "../utils";
 import * as L from "../store/login";
 import * as A from "../store/asyncStorage";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import SplashScreen from "react-native-splash-screen";
+import { Image, StyleSheet, View } from "react-native";
 
-export default function () {
+export default function Splash() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const isFocused = useIsFocused();
 
   const goAuth = useCallback(() => navigation.navigate("AuthNavigator"), []);
   const goHome = useCallback(() => navigation.navigate("TabNavigator"), []);
@@ -45,11 +47,31 @@ export default function () {
         const id = setTimeout(() => {
           SplashScreen.hide();
           goAuth(); // 첫 로그인 화면으로 이동
-        }, 2000);
+        }, 1500);
         return () => clearTimeout(id);
       }
     });
-  }, []);
+  }, [isFocused]);
 
-  return null;
+  return (
+    <View style={styles.container}>
+      <Image
+        style={styles.logo}
+        source={require("../assets/images/splash.png")}
+      />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logo: {
+    height: "30%",
+    width: "30%",
+    resizeMode: "contain",
+  },
+});

@@ -1,9 +1,9 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import Loading from "./Loading";
 import AuthNavigator from "./AuthNavigator";
 import TabNavigator from "./TabNavigator";
 import OnBoarding from "./OnBoarding";
+import Splash from "./Splash";
 
 const Stack = createStackNavigator();
 
@@ -12,7 +12,7 @@ export default function MainNavigator() {
     <Stack.Navigator
       screenOptions={{ headerShown: false, cardStyleInterpolator: forFade }}
     >
-      <Stack.Screen name="Loading" component={Loading}></Stack.Screen>
+      <Stack.Screen name="Splash" component={Splash}></Stack.Screen>
       <Stack.Screen
         name="AuthNavigator"
         component={AuthNavigator}

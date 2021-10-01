@@ -1,4 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, StackActions } from "@react-navigation/native";
 import React, { useCallback } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
@@ -38,7 +38,7 @@ export default function MyPage() {
     U.removeStorage(L.loggedUserKey);
     U.removeStorage("accessJWT");
     U.removeStorage("refreshJWT");
-    // navigation.navigate("Auth");
+    navigation.dispatch(StackActions.popToTop());
   }, []);
 
   return (
