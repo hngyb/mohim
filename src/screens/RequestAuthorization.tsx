@@ -57,11 +57,11 @@ export default function RequestAuthorization({ navigation, route }) {
           if (errorStatus === 400) {
             // 초대코드 오류
             Alert.alert("초대코드를 확인해주세요", "", [{ text: "확인" }]);
-          }
-          if (errorStatus === 401) {
+          } else if (errorStatus === 401) {
             // accessToken 만료 -> accessToken 업데이트
-            Alert.alert("비정상적인 접근입니다");
             await updateToken();
+          } else {
+            Alert.alert("비정상적인 접근입니다");
           }
           setLoading(false);
         });
@@ -120,7 +120,7 @@ export default function RequestAuthorization({ navigation, route }) {
     const groupIds = {
       churchGroupId: churchGroupId,
       districtGroupId: districtGroupId,
-      groupGroupId: departmentGroupId,
+      departmentGroupId: departmentGroupId,
       serviceGroups: serviceGroups,
     };
     axios.post(
@@ -128,7 +128,7 @@ export default function RequestAuthorization({ navigation, route }) {
       {
         church: groupIds.churchGroupId.data.id,
         district: groupIds.districtGroupId.data.id,
-        group: groupIds.groupGroupId.data.id,
+        department: groupIds.departmentGroupId.data.id,
         services: serviceGroups,
         sex: sex,
       },

@@ -18,6 +18,7 @@ import axios from "axios";
 import * as S from "./Styles";
 import { NavigationHeader, TouchableView } from "../components";
 import { ActivityIndicator, Colors } from "react-native-paper";
+import { getCookie } from "../utils";
 
 /*
 Todo
@@ -53,11 +54,13 @@ export default function SignUp() {
           axios
             .post("/api/users/login", { email, password })
             .then((response) => {
-              const { accessToken, refreshToken } = response.data;
+              let tokens = response.headers["set-cookie"][0];
+              const accessToken = getCookie(tokens, "accessToken");
+              const refreshToken = getCookie(tokens, "refreshToken");
               U.writeToStorage("accessJWT", accessToken);
               U.writeToStorage("refreshJWT", refreshToken);
               dispatch(L.signUpAction({ name, email, password }));
-              const tokens = { accessToken, refreshToken };
+              tokens = { accessToken, refreshToken };
               return tokens;
             })
             .then((tokens) => {

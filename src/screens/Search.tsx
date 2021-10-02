@@ -62,7 +62,7 @@ export default function Search() {
   }, [selectedCategory, selectedChurch, searchAgain, accessToken]);
 
   const getChurchList = async () => {
-    axios
+    await axios
       .get("/api/groups/church-list", {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
@@ -120,7 +120,7 @@ export default function Search() {
       : selectedCategory === "구역"
       ? (search_address = "district-list")
       : selectedCategory === "부서"
-      ? (search_address = "group-list")
+      ? (search_address = "department-list")
       : (search_address = "service-list");
 
     const searchResponse = await axios.get(`/api/groups/${search_address}`, {

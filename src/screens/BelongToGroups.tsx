@@ -109,7 +109,6 @@ export default function BelongToGroups() {
       belongToGroupsArray &&
       !isEqual(belongToGroupsArray, prevBelongToGroupsArray.current)
     ) {
-      console.log(belongToGroupsArray);
       prevBelongToGroupsArray.current = belongToGroupsArray;
       belongToGroupsArrayToObject().then(() => {
         setLoading(false);
@@ -146,7 +145,7 @@ export default function BelongToGroups() {
     });
     const churchName = belongToChurch.data.FollowGroup.name;
 
-    axios
+    await axios
       .get("/api/groups/district-list", {
         params: {
           church: churchName,
@@ -156,8 +155,8 @@ export default function BelongToGroups() {
       .then((districtList) => {
         setDistrictList(districtList.data);
       });
-    axios
-      .get("/api/groups/group-list", {
+    await axios
+      .get("/api/groups/department-list", {
         params: {
           church: churchName,
         },
@@ -166,7 +165,7 @@ export default function BelongToGroups() {
       .then((departmentList) => {
         setDepartmentList(departmentList.data);
       });
-    axios
+    await axios
       .get("/api/groups/service-list", {
         params: {
           church: churchName,
@@ -216,7 +215,7 @@ export default function BelongToGroups() {
           belongToChurch.push(group);
         } else if (group.FollowGroup.category === "district") {
           belongToDistrict.push(group);
-        } else if (group.FollowGroup.category === "group") {
+        } else if (group.FollowGroup.category === "department") {
           belongToDepartment.push(group);
         } else if (group.FollowGroup.category === "service") {
           belongToService.push(group);

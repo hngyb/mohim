@@ -9,7 +9,7 @@ import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import { useDispatch, useStore } from "react-redux";
 import axios from "axios";
-import { isUndefined } from "lodash";
+import { isUndefined, reject } from "lodash";
 import { getCookie } from "../utils";
 
 export default function SetDistrict({ navigation, route }) {
@@ -81,7 +81,7 @@ export default function SetDistrict({ navigation, route }) {
   };
 
   const getDistrictList = async () => {
-    axios
+    await axios
       .get("/api/groups/district-list", {
         params: {
           church: church,

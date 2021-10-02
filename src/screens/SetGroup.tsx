@@ -82,8 +82,8 @@ export default function SetGroup({ navigation, route }) {
   };
 
   const getDepartmentList = async () => {
-    axios
-      .get("/api/groups/group-list", {
+    await axios
+      .get("/api/groups/department-list", {
         params: {
           church: church,
         },
