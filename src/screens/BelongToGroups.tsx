@@ -363,7 +363,7 @@ export default function BelongToGroups() {
       });
       const groupIdToBeAdded = groupInfoToBeAdded.data.id;
       await axios.post(
-        "/api/follows",
+        "/api/follows/belong-to",
         {
           groupId: groupIdToBeAdded,
         },
