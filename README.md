@@ -8,7 +8,7 @@
 
 ## 데모 영상
 
-![데모영상](./screenshots/demo1.gif)
-![데모영상](./screenshots/demo2.gif)
+<img src = "./screenshots/demo1.gif" width="40%">
+<img src = "./screenshots/demo2.gif" width="40%">
 
 ---
