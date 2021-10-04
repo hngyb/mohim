@@ -537,7 +537,9 @@ export default function Search() {
       </View>
       <View style={{ flex: 4 }}>
         {loading ? (
-          <ActivityIndicator size="large" color={S.colors.primary} />
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            <ActivityIndicator size="large" color={S.colors.primary} />
+          </View>
         ) : (
           <FlatList
             data={searchedData}

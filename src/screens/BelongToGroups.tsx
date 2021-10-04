@@ -25,7 +25,7 @@ export default function BelongToGroups() {
     service?: Array<any>;
     fellowship?: Array<any>;
   }
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isColorPalettesModalVisible, setColorPalettesModalVisible] =
     useState(false);
   const [isReviseModalVisible, setReviseModalVisible] = useState(false);
@@ -640,169 +640,175 @@ export default function BelongToGroups() {
           </TouchableView>
         )}
       ></NavigationHeader>
-      <FlatList
-        style={[styles.flatListContainer]}
-        ListHeaderComponent={
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text
-              style={[
-                styles.text,
-                {
-                  paddingBottom: 10,
-                },
-              ]}
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <ActivityIndicator size="large" color={S.colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          style={[styles.flatListContainer]}
+          ListHeaderComponent={
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
-              교회
-            </Text>
-          </View>
-        }
-        data={belongToGroupsObject.church}
-        renderItem={renderItem}
-        listKey={"church"}
-        keyExtractor={(item, index) => `_key${index.toString()}`}
-        onEndReachedThreshold={0.8}
-        ListFooterComponent={
-          <>
-            <FlatList
-              style={{ paddingTop: 30 }}
-              ListHeaderComponent={
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.text,
-                      {
-                        paddingBottom: 10,
-                      },
-                    ]}
-                  >
-                    구역
-                  </Text>
-                  <TouchableView
-                    onPress={() => {
-                      toggleReviseModal("구역");
+              <Text
+                style={[
+                  styles.text,
+                  {
+                    paddingBottom: 10,
+                  },
+                ]}
+              >
+                교회
+              </Text>
+            </View>
+          }
+          data={belongToGroupsObject.church}
+          renderItem={renderItem}
+          listKey={"church"}
+          keyExtractor={(item, index) => `_key${index.toString()}`}
+          onEndReachedThreshold={0.8}
+          ListFooterComponent={
+            <>
+              <FlatList
+                style={{ paddingTop: 30 }}
+                ListHeaderComponent={
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <MaterialIcons
-                      name="edit"
-                      size={20}
-                      color={S.colors.secondary}
-                    ></MaterialIcons>
-                  </TouchableView>
-                </View>
-              }
-              data={belongToGroupsObject.district}
-              renderItem={renderItem}
-              listKey={"district"}
-              keyExtractor={(item, index) => `_key${index.toString()}`}
-              onEndReachedThreshold={0.8}
-              ListFooterComponent={
-                loading ? (
-                  <ActivityIndicator size="large" color={S.colors.primary} />
-                ) : (
-                  <></>
-                )
-              }
-            />
-            <FlatList
-              style={{ paddingTop: 30 }}
-              ListHeaderComponent={
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.text,
-                      {
-                        paddingBottom: 10,
-                      },
-                    ]}
-                  >
-                    부서
-                  </Text>
-                  <TouchableView
-                    onPress={() => {
-                      toggleReviseModal("부서");
+                    <Text
+                      style={[
+                        styles.text,
+                        {
+                          paddingBottom: 10,
+                        },
+                      ]}
+                    >
+                      구역
+                    </Text>
+                    <TouchableView
+                      onPress={() => {
+                        toggleReviseModal("구역");
+                      }}
+                    >
+                      <MaterialIcons
+                        name="edit"
+                        size={20}
+                        color={S.colors.secondary}
+                      ></MaterialIcons>
+                    </TouchableView>
+                  </View>
+                }
+                data={belongToGroupsObject.district}
+                renderItem={renderItem}
+                listKey={"district"}
+                keyExtractor={(item, index) => `_key${index.toString()}`}
+                onEndReachedThreshold={0.8}
+                ListFooterComponent={
+                  loading ? (
+                    <ActivityIndicator size="large" color={S.colors.primary} />
+                  ) : (
+                    <></>
+                  )
+                }
+              />
+              <FlatList
+                style={{ paddingTop: 30 }}
+                ListHeaderComponent={
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <MaterialIcons
-                      name="edit"
-                      size={20}
-                      color={S.colors.secondary}
-                    ></MaterialIcons>
-                  </TouchableView>
-                </View>
-              }
-              data={belongToGroupsObject.department}
-              renderItem={renderItem}
-              listKey={"group"}
-              keyExtractor={(item, index) => `_key${index.toString()}`}
-              onEndReachedThreshold={0.8}
-              ListFooterComponent={
-                loading ? (
-                  <ActivityIndicator size="large" color={S.colors.primary} />
-                ) : (
-                  <></>
-                )
-              }
-            />
-            <FlatList
-              style={{ paddingTop: 30 }}
-              ListHeaderComponent={
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.text,
-                      {
-                        paddingBottom: 10,
-                      },
-                    ]}
-                  >
-                    봉사
-                  </Text>
-                  <TouchableView
-                    onPress={() => {
-                      toggleReviseModal("봉사");
+                    <Text
+                      style={[
+                        styles.text,
+                        {
+                          paddingBottom: 10,
+                        },
+                      ]}
+                    >
+                      부서
+                    </Text>
+                    <TouchableView
+                      onPress={() => {
+                        toggleReviseModal("부서");
+                      }}
+                    >
+                      <MaterialIcons
+                        name="edit"
+                        size={20}
+                        color={S.colors.secondary}
+                      ></MaterialIcons>
+                    </TouchableView>
+                  </View>
+                }
+                data={belongToGroupsObject.department}
+                renderItem={renderItem}
+                listKey={"group"}
+                keyExtractor={(item, index) => `_key${index.toString()}`}
+                onEndReachedThreshold={0.8}
+                ListFooterComponent={
+                  loading ? (
+                    <ActivityIndicator size="large" color={S.colors.primary} />
+                  ) : (
+                    <></>
+                  )
+                }
+              />
+              <FlatList
+                style={{ paddingTop: 30 }}
+                ListHeaderComponent={
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <MaterialIcons
-                      name="edit"
-                      size={20}
-                      color={S.colors.secondary}
-                    ></MaterialIcons>
-                  </TouchableView>
-                </View>
-              }
-              data={belongToGroupsObject.service}
-              renderItem={renderItem}
-              listKey={"service"}
-              keyExtractor={(item, index) => `_key${index.toString()}`}
-              onEndReachedThreshold={0.8}
-              ListFooterComponent={
-                loading ? (
-                  <ActivityIndicator size="large" color={S.colors.primary} />
-                ) : (
-                  <></>
-                )
-              }
-            />
-          </>
-        }
-      />
+                    <Text
+                      style={[
+                        styles.text,
+                        {
+                          paddingBottom: 10,
+                        },
+                      ]}
+                    >
+                      봉사
+                    </Text>
+                    <TouchableView
+                      onPress={() => {
+                        toggleReviseModal("봉사");
+                      }}
+                    >
+                      <MaterialIcons
+                        name="edit"
+                        size={20}
+                        color={S.colors.secondary}
+                      ></MaterialIcons>
+                    </TouchableView>
+                  </View>
+                }
+                data={belongToGroupsObject.service}
+                renderItem={renderItem}
+                listKey={"service"}
+                keyExtractor={(item, index) => `_key${index.toString()}`}
+                onEndReachedThreshold={0.8}
+                ListFooterComponent={
+                  loading ? (
+                    <ActivityIndicator size="large" color={S.colors.primary} />
+                  ) : (
+                    <></>
+                  )
+                }
+              />
+            </>
+          }
+        />
+      )}
       {reviseModal()}
       <Modal
         style={{

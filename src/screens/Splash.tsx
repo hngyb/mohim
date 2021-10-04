@@ -51,11 +51,8 @@ export default function Splash() {
         });
       } else {
         // 로그인 정보가 없을 때
-        const id = setTimeout(() => {
-          SplashScreen.hide();
-          goAuth(); // 첫 로그인 화면으로 이동
-        }, 1500);
-        return () => clearTimeout(id);
+        SplashScreen.hide();
+        goAuth(); // 첫 로그인 화면으로 이동
       }
     });
   }, [isFocused]);
