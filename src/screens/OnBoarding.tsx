@@ -1,10 +1,9 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import TabNavigator from "./TabNavigator";
 import SetChurch from "./SetChurch";
 import SetSex from "./SetSex";
 import SetDistrict from "./SetDistrict";
-import SetGroup from "./SetGroup";
+import setDepartment from "./SetDepartment";
 import SetService from "./SetService";
 import RequestAuthorization from "./RequestAuthorization";
 
@@ -16,7 +15,10 @@ export default function OnBoarding() {
       <Stack.Screen name="SetChurch" component={SetChurch}></Stack.Screen>
       <Stack.Screen name="SetSex" component={SetSex}></Stack.Screen>
       <Stack.Screen name="SetDistrict" component={SetDistrict}></Stack.Screen>
-      <Stack.Screen name="SetGroup" component={SetGroup}></Stack.Screen>
+      <Stack.Screen
+        name="SetDepartment"
+        component={setDepartment}
+      ></Stack.Screen>
       <Stack.Screen name="SetService" component={SetService}></Stack.Screen>
       <Stack.Screen
         name="RequestAuthorization"

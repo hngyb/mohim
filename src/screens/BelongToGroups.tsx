@@ -583,7 +583,7 @@ export default function BelongToGroups() {
                     ? "교회"
                     : item.item.FollowGroup.category === "district"
                     ? "구역"
-                    : item.item.FollowGroup.category === "group"
+                    : item.item.FollowGroup.category === "department"
                     ? "부서"
                     : item.item.FollowGroup.category === "service"
                     ? "봉사"

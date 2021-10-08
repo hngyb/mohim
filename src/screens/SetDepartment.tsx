@@ -12,7 +12,7 @@ import axios from "axios";
 import { isUndefined } from "lodash";
 import { getCookie } from "../utils";
 
-export default function SetGroup({ navigation, route }) {
+export default function SetDepartment({ navigation, route }) {
   const store = useStore();
   const dispatch = useDispatch();
   const [selectedDepartment, setSelectedDepartment] = useState<string>(
@@ -112,7 +112,7 @@ export default function SetGroup({ navigation, route }) {
             alignItems: "center",
           }}
         >
-          <Text style={[styles.questionText]}>소속을 선택해주세요</Text>
+          <Text style={[styles.questionText]}>부서를 선택해주세요</Text>
         </View>
         <View style={{ flex: 2 }}>
           <Picker
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   },
   QAContainer: {
     flex: 1,
-    paddingHorizontal: "5%%",
+    paddingHorizontal: "5%",
   },
   nextContainer: {
     flex: 1,
