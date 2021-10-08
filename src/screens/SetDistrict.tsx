@@ -37,7 +37,7 @@ export default function SetDistrict({ navigation, route }) {
       ...route.params,
       district: selectedDistrict,
     };
-    navigation.navigate("SetGroup", {
+    navigation.navigate("SetDepartment", {
       ...params,
       district: isUndefined(params.district)
         ? districtList[0].name

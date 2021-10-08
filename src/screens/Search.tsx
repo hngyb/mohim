@@ -331,7 +331,7 @@ export default function Search() {
                     ? "교회"
                     : item.item.category === "district"
                     ? "구역"
-                    : item.item.category === "group"
+                    : item.item.category === "department"
                     ? "부서"
                     : item.item.category === "service"
                     ? "봉사"

@@ -12,8 +12,6 @@ import * as U from "../utils";
 import * as A from "../store/asyncStorage";
 import * as I from "../store/isAuthorized";
 
-// todo:
-// 1. logout할 때, latest update 지우기
 export default function MyPage() {
   const store = useStore();
   const dispatch = useDispatch();
