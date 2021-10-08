@@ -48,7 +48,6 @@
     "react-native-vector-icons": "^8.1.0",
     "react-native-web": "~0.13.12",
     "react-redux": "^7.2.4",
-    "realm": "^10.6.1",
     "redux": "^4.1.0",
     "redux-thunk": "^2.3.0"
   },
